@@ -1,0 +1,213 @@
+{
+ "xi": 45.0,
+ "E_faisable": 300.0,
+ "E_utile": 280.0,
+ "E_robuste": null,
+ "detail": [
+  {
+   "E": 280.0,
+   "xi": 45.0,
+   "combos": [
+    {
+     "E": 280.0,
+     "combo": "SG90/S3306/S-U400",
+     "echantillon": 2048,
+     "admissibles_sobol": 0,
+     "admissibles": 0
+    },
+    {
+     "E": 280.0,
+     "combo": "S-U400/S3306/S-U400",
+     "echantillon": 2048,
+     "admissibles_sobol": 0,
+     "admissibles": 0
+    },
+    {
+     "E": 280.0,
+     "combo": "S3306/S3306/S-U400",
+     "echantillon": 2048,
+     "admissibles_sobol": 0,
+     "admissibles": 0
+    },
+    {
+     "E": 280.0,
+     "combo": "SG90/S3306/S3306",
+     "echantillon": 2048,
+     "admissibles_sobol": 721,
+     "admissibles": 1647,
+     "nesm_max": 2.685,
+     "n_nesm_cible": 265,
+     "C2_min": 1.773,
+     "masse_pattes_min": 1.399
+    },
+    {
+     "E": 280.0,
+     "combo": "S-U400/S3306/S3306",
+     "echantillon": 2048,
+     "admissibles_sobol": 751,
+     "admissibles": 1704,
+     "nesm_max": 2.907,
+     "n_nesm_cible": 583,
+     "C2_min": 1.812,
+     "masse_pattes_min": 1.494
+    },
+    {
+     "E": 280.0,
+     "combo": "S3306/S3306/S3306",
+     "echantillon": 2048,
+     "admissibles_sobol": 85,
+     "admissibles": 798,
+     "nesm_max": 2.115,
+     "n_nesm_cible": 24,
+     "C2_min": 1.841,
+     "masse_pattes_min": 1.843
+    }
+   ],
+   "faisable": true,
+   "meilleur_nesm": {
+    "L2": 62.734,
+    "L3": 91.001,
+    "alpha": 33.945,
+    "beta": 82.903,
+    "xi": 45.0,
+    "D": 63.286,
+    "h": 40.274,
+    "f1_masse_pattes": 1.503,
+    "f2_nesm": 2.907,
+    "f3_couple_C2": 1.825,
+    "servo_C1": "S-U400",
+    "servo_C2": "S3306",
+    "servo_C3": "S3306"
+   },
+   "utile": true,
+   "robuste": false,
+   "meilleur_utile": {
+    "L2": 62.734,
+    "L3": 91.001,
+    "alpha": 33.945,
+    "beta": 82.903,
+    "xi": 45.0,
+    "D": 63.286,
+    "h": 40.274,
+    "f1_masse_pattes": 1.503,
+    "f2_nesm": 2.907,
+    "f3_couple_C2": 1.825,
+    "servo_C1": "S-U400",
+    "servo_C2": "S3306",
+    "servo_C3": "S3306"
+   },
+   "taux_reussite_meilleurs": [
+    0.39,
+    0.58,
+    0.7,
+    0.58,
+    0.59,
+    0.44,
+    0.6,
+    0.57,
+    0.53,
+    0.54,
+    0.57,
+    0.59,
+    0.58,
+    0.53,
+    0.58,
+    0.55,
+    0.57,
+    0.59,
+    0.54,
+    0.59,
+    0.59,
+    0.35,
+    0.5,
+    0.47,
+    0.51,
+    0.31,
+    0.52,
+    0.53,
+    0.55,
+    0.58,
+    0.56,
+    0.39,
+    0.54,
+    0.35,
+    0.45,
+    0.52,
+    0.33,
+    0.47,
+    0.46,
+    0.45
+   ]
+  },
+  {
+   "E": 300.0,
+   "xi": 45.0,
+   "combos": [
+    {
+     "E": 300.0,
+     "combo": "SG90/S3306/S-U400",
+     "echantillon": 2048,
+     "admissibles_sobol": 0,
+     "admissibles": 0
+    },
+    {
+     "E": 300.0,
+     "combo": "S-U400/S3306/S-U400",
+     "echantillon": 2048,
+     "admissibles_sobol": 0,
+     "admissibles": 0
+    },
+    {
+     "E": 300.0,
+     "combo": "S3306/S3306/S-U400",
+     "echantillon": 2048,
+     "admissibles_sobol": 0,
+     "admissibles": 0
+    },
+    {
+     "E": 300.0,
+     "combo": "SG90/S3306/S3306",
+     "echantillon": 2048,
+     "admissibles_sobol": 0,
+     "admissibles": 0
+    },
+    {
+     "E": 300.0,
+     "combo": "S-U400/S3306/S3306",
+     "echantillon": 2048,
+     "admissibles_sobol": 2,
+     "admissibles": 7,
+     "nesm_max": 0.551,
+     "n_nesm_cible": 0,
+     "C2_min": 1.959,
+     "masse_pattes_min": 1.503
+    },
+    {
+     "E": 300.0,
+     "combo": "S3306/S3306/S3306",
+     "echantillon": 2048,
+     "admissibles_sobol": 0,
+     "admissibles": 0
+    }
+   ],
+   "faisable": true,
+   "meilleur_nesm": {
+    "L2": 55.704,
+    "L3": 98.342,
+    "alpha": 41.105,
+    "beta": 68.868,
+    "xi": 45.0,
+    "D": 77.428,
+    "h": 40.107,
+    "f1_masse_pattes": 1.503,
+    "f2_nesm": 0.551,
+    "f3_couple_C2": 1.96,
+    "servo_C1": "S-U400",
+    "servo_C2": "S3306",
+    "servo_C3": "S3306"
+   },
+   "utile": false,
+   "robuste": false
+  }
+ ]
+}

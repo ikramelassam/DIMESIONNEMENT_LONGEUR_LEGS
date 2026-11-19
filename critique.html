@@ -1,0 +1,33 @@
+<h3>10.1 Ce qui est solide</h3>
+<ul>
+<li><b>Statique exacte.</b> Les réactions à 3 et 4 pieds, le pire CdG sur une boîte et le pire D le long de la course sont démontrés, puis vérifiés par tests et par un calcul indépendant.</li>
+<li><b>Toutes les tâches du cahier des charges sont vérifiées</b>, y compris la marche arrière et la rotation sur place, souvent oubliées.</li>
+<li><b>Le choix des servos est exact</b> (pas d'heuristique), et le coût de chaque choix est visible sur le front.</li>
+<li><b>La robustesse est testée</b> sur 6 couches de non-dominance, et pas seulement sur le front, qui est fragile.</li>
+<li><b>Les bornes de recherche atteintes sont signalées automatiquement</b> (colonne « bornes de recherche atteintes »).</li>
+</ul>
+
+<h3>10.2 Limites du modèle, et dans quel sens elles jouent</h3>
+<div class="tw"><table><thead><tr><th>Hypothèse</th><th>Effet sur le résultat</th><th>Comment lever</th></tr></thead><tbody>
+<tr><td>Statique : pas d'inertie, chocs ignorés</td><td>Couples sous-estimés pendant les accélérations de la patte (faibles en marche lente). La correction z_G·a/g couvre seulement l'accélération du corps.</td><td>MuJoCo sur les finalistes</td></tr>
+<tr><td>Poids des segments ignoré dans τ₂ en appui</td><td>Prudent : τ₂ surestimé de quelques %</td><td>—</td></tr>
+<tr><td>Efforts internes à 4 pieds (servos asservis en position qui « tirent » les uns contre les autres)</td><td><b>Non modélisés.</b> Ils peuvent charger C1 et faire glisser un pied. C1 au servo le plus léger est donc à confirmer.</td><td>MuJoCo + banc d'essai</td></tr>
+<tr><td>Allure témoin : crawl discontinu</td><td>Prouve l'existence d'un mouvement, mais la politique apprise en utilisera un autre, souvent plus brutal.</td><td>Garder SF ≥ 1,2 ; tester la politique sur les finalistes</td></tr>
+<tr><td>Balancement du corps limité à ±60 mm</td><td>Cette borne est souvent atteinte : avec plus de balancement, le NESM serait plus grand, mais la pince bougerait davantage.</td><td>Décision d'équipe sur le balancement acceptable</td></tr>
+<tr><td>Accélération de référence a = 0,5 m/s²</td><td>Fixe τ₁ et la correction de SSM. Valeur supposée.</td><td>À mesurer en simulation</td></tr>
+<tr><td>ε_legs : borne prudente</td><td>Élargit un peu la boîte du CdG (environ 9 mm), même en S1</td><td>Évaluer le CdG pour chaque combinaison de servos si nécessaire</td></tr>
+<tr><td>Sol plat (sauf l'obstacle), μ suffisant</td><td>Pas de pente, pas de glissement</td><td>Ajouter des phases « pente » si le cahier l'exige</td></tr>
+<tr><td>Échantillonnage fini (8192 + raffinement)</td><td>Le front est approché ; un point meilleur peut exister entre deux échantillons</td><td>Test de convergence : doubler n et comparer les fronts</td></tr>
+<tr><td>Bornes de recherche</td><td>Un choix touche une borne dans un cas (L₂ = 40 mm, β = 100° pour « dehors, S1, le plus léger ») : l'optimum réel peut être au-delà</td><td>Élargir les bornes concernées lors de la prochaine exécution</td></tr>
+</tbody></table></div>
+
+<h3>10.3 Remise en question des décisions d'équipe</h3>
+<ul>
+<li><b>« 4 kg = robot sans bras ».</b> Les pattes portent quand même le bras et l'objet en marche. Le programme les inclut dans M. Si l'encadrant entend « 4 kg avec bras », le budget est plus serré.</li>
+<li><b>Pas d'IMU.</b> Une politique apprise sans orientation du corps est plus fragile. Le robot dépendra davantage d'allures statiquement stables, ce qui rend les marges ci-dessus encore plus importantes. À rediscuter avec le pôle AI+RL.</li>
+<li><b>Coxa « dedans ».</b> Ce choix n'est pas imposé par les calculs, puisque les fronts sont proches. Il se justifie par la protection des servos C1 et la compacité, à condition que les coxas tiennent dans le châssis (contrainte G7, à vérifier en CAO).</li>
+<li><b>Le servo unique de 2,35 N·m sur toutes les articulations</b> est sur-dimensionné en C1 et probablement insuffisant en C2 si le CdG est incertain : il vaut mieux des servos différents par articulation.</li>
+</ul>
+
+<h3>10.4 Ce qui reste hors modèle (vérifications ultérieures)</h3>
+<p>Autonomie de 30 min (énergie ∝ Σ τ², Seok 2015), courant total des 12 servos (pôle électrique), se lever depuis le sol, résistance des fixations et des palonniers, câbles à travers C1, fidélité du modèle de simulation (URDF, frottements des servos).</p>

@@ -1,0 +1,100 @@
+# =====================================================================
+#  Gr2 - dimensionnement des pattes : FICHIER D'ENTREES
+#  Unites : mm, kg, N.m, degres.  Repere corps : origine au centre du
+#  chassis (vue de dessus), x vers l'avant, y vers la gauche, z vers le
+#  haut ; les hauteurs "z_rel" sont mesurees depuis le DESSOUS du chassis.
+#  [HYP] = valeur hypothetique a remplacer par la valeur reelle.
+#  [CDC] = cahier des charges (fixe).  [EQ] = decision d'equipe.
+# =====================================================================
+
+chassis:
+  N_ch: 230.0        # longueur exterieure (x) [HYP]
+  M_ch: 190.0        # largeur exterieure (y) [HYP]
+  c: 15.0            # retrait de l'axe (C1 ou C2) par rapport au bord [HYP]
+  e: 15.0            # hauteur de l'axe C2 au-dessus du dessous du chassis [HYP]
+  overhang_C2: 10.0  # (montage "dedans") debord max autorise de l'axe C2 hors du chassis [HYP]
+  mount: dedans      # "dedans" ou "dehors" (L1 dans / hors du chassis) [EQ]
+
+leg:
+  L1: 30.0           # coxa = L1_min mesure en CAO [HYP]
+  seg_lin_mass: 0.162   # kg/m : plat alu 20x3 mm (2700 kg/m3 x 60 mm2) [HYP]
+  bracket_mass: 0.015   # kg par articulation (equerres, vis) [HYP]
+  foot_mass: 0.010      # kg [HYP]
+  foot_diam: 20.0       # mm [HYP]
+  leg_width: 25.0       # largeur d'une patte vue de dessus (collisions) [HYP]
+
+# --- Masses du corps (hors pattes). 4 kg max = robot SANS bras [CDC+EQ] ---
+body:
+  chassis:  {m: 1.50, x: 0.0,   y: 0.0, z_rel: 25.0}   # chassis + cables + electronique [HYP]
+  battery:  {m: 0.54, x: -20.0, y: 0.0, z_rel: 15.0}   # position nominale [EQ masse, HYP position]
+  battery_zone: {x: [-80.0, 40.0], y: [-30.0, 30.0], z_rel: [10.0, 25.0]}  # zone possible [HYP]
+  arm_mass: 0.40     # [EQ]
+  object_mass: 0.10  # [CDC]
+  # postures du bras : CdG du bras et de l'objet (null = pas d'objet) [HYP]
+  arm_postures:
+    replie:    {arm: [70.0, 0.0, 70.0],  obj: null}
+    transport: {arm: [90.0, 0.0, 90.0],  obj: [130.0, 0.0, 110.0]}
+    tendu:     {arm: [150.0, 0.0, 60.0], obj: [265.0, 0.0, 20.0]}   # objet a >=150 mm de la fixation [CDC]
+  walk_posture: transport   # posture du bras pendant la marche (scenario nominal)
+  manip_posture: tendu      # posture du bras pendant la saisie (4 pieds au sol)
+  walk_postures_S2: [replie, transport]   # pire cas en marche : regle d'usage = pas de marche bras tendu [EQ a valider]
+  manip_postures_S2: [replie, transport, tendu]
+  eps_cdg_xy: 10.0          # incertitude CdG sans CAO (mm) [HYP]
+  eps_cdg_z: 10.0
+  eps_s1: 0.0               # incertitude ajoutee en scenario nominal S1 (0 = nominal pur)
+  mass_robot_max_sans_bras: 4.0   # [CDC+EQ]
+
+# --- Catalogue de servos. EX_* = exemples FICTIFS a remplacer. ---
+# C_cont = couple CONTINU (pas de blocage). range = course angulaire.
+servos:
+  - {name: EX_leger,  C_cont: 0.60, mass: 0.020, range: 180.0}
+  - {name: EX_moyen,  C_cont: 1.20, mass: 0.040, range: 180.0}
+  - {name: EQUIPE,    C_cont: 2.35, mass: 0.060, range: 180.0}   # 2,35 N.m : continu ou blocage ? [A VERIFIER]
+  - {name: EX_fort,   C_cont: 4.00, mass: 0.080, range: 180.0}
+reference_servo: EQUIPE      # masses de reference pour le CdG des pattes
+
+# --- Taches, allure, marges ---
+task:
+  obstacle: 30.0         # [CDC]
+  dh_lift: 20.0          # marge de levee au-dessus de l'obstacle (Zamani 2018) [HYP]
+  h_margin: 10.0         # garde au sol >= obstacle + h_margin (obstacle sous le ventre) [EQ]
+  stroke: 40.0           # course R_s du pied par cycle (vitesse = plafond) [HYP]
+  yaw_step: 10.0         # pas de rotation sur place (deg) [HYP]
+  accel: 0.5             # acceleration de reference du corps (m/s2) [HYP]
+  sway_max: 60.0         # balancement max du corps cherche (mm)
+  sway_n: 11             # grille de balancement n x n
+
+margins:
+  SF: 1.2                # coefficient de securite sur le couple [EQ a fixer]
+  nesm_min: 1.0          # NESM minimal (mm) [EQ a fixer]
+  eps_foot: 5.0          # erreur de placement du pied (mm) [HYP]
+  theta3_min: 20.0       # garde-fou singularite (deg)
+  theta3_max: 160.0
+  joint_margin: 5.0      # marge aux butees (deg)
+  servo_spacing: 40.0    # distance min entre axes C1 voisins (encombrement servo) [HYP]
+  feet_clearance: 30.0   # distance min entre pieds / pattes (mm)
+  chassis_clearance: 10.0  # pied a au moins ... mm hors du contour du chassis
+  reach_margin: 5.0      # marge de portee |L2-L3|+m <= d <= L2+L3-m (mm)
+
+search:
+  n_sobol: 8192          # echantillons (puissance de 2)
+  seed: 1
+  bounds:                # variables de decision
+    L2:   [40.0, 140.0]
+    L3:   [60.0, 200.0]
+    alpha: [2.0, 70.0]     # alpha > 0 : architecture 2
+    beta: [30.0, 100.0]
+    xi:   [0.0, 90.0]
+  refine_rounds: 2
+  refine_per_point: 24
+
+robust:
+  n_mc: 100
+  rel_mass: 0.10         # +-10 % masses (Bjelonic 2023)
+  rel_torque: 0.10       # -10 % couple servo
+  abs_len: 2.0           # +-2 mm longueurs
+  abs_ang: 2.0           # +-2 deg posture
+  abs_cdg: 10.0          # +-10 mm CdG corps
+  pass_rate: 0.95
+  backoff_h: 10.0       # recul de la garde au sol (mm) pour la contrepartie robuste
+  backoff_nesm: 0.5     # recul du NESM minimal (mm)

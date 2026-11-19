@@ -1,0 +1,1132 @@
+<title>Simulateur de pattes Gr2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Mise en page : poste de travail d'ingénierie. Réglages à gauche (colonne
+   défilante), résultats à droite ; une colonne sur téléphone. */
+:root{
+  --bg:#eef1f4; --panel:#ffffff; --ink:#18212b; --muted:#5a6675; --rule:#d5dbe2; --soft:#f5f7f9;
+  --accent:#0d6b86; --accent-soft:#e2f0f4; --plot:#6b4fa0;
+  --ok:#1d7a46; --ok-soft:#e3f3e9; --warn:#a35d00; --warn-soft:#fbf0de; --bad:#b3261e; --bad-soft:#fbe7e5;
+  --poly:rgba(13,107,134,.13); --box:#b3261e;
+  --f-head:"Archivo","Helvetica Neue",Arial,sans-serif; --f-body:"Source Sans 3","Segoe UI",system-ui,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12171d; --panel:#1a2129; --ink:#e3e8ee; --muted:#9aa6b4; --rule:#2d3742; --soft:#202832;
+  --accent:#4fb6d3; --accent-soft:#16323d; --plot:#b39ae6;
+  --ok:#5cc98a; --ok-soft:#173326; --warn:#e6a54a; --warn-soft:#3a2b15; --bad:#f08a80; --bad-soft:#3b1c1a;
+  --poly:rgba(79,182,211,.16); --box:#f08a80; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12171d; --panel:#1a2129; --ink:#e3e8ee; --muted:#9aa6b4; --rule:#2d3742; --soft:#202832;
+  --accent:#4fb6d3; --accent-soft:#16323d; --plot:#b39ae6;
+  --ok:#5cc98a; --ok-soft:#173326; --warn:#e6a54a; --warn-soft:#3a2b15; --bad:#f08a80; --bad-soft:#3b1c1a;
+  --poly:rgba(79,182,211,.16); --box:#f08a80; color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body)}
+.app{max-width:1500px;margin:0 auto;padding-inline:16px;padding-block:16px 48px;display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:1080px){.app{grid-template-columns:380px minmax(0,1fr)}}
+header.top{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between}
+h1{font:700 24px/1.15 var(--f-head);margin:0;letter-spacing:-.01em;text-wrap:balance}
+.sub{color:var(--muted);font-size:13.5px;margin:2px 0 0;max-width:70ch}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:6px;overflow:hidden;background:var(--panel)}
+.seg button{font:500 13px var(--f-body);border:0;background:transparent;color:var(--ink);padding:6px 11px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--panel)}
+.seg button:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.toolbar .lab{font:500 11px var(--f-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+aside.controls{min-width:0}
+@media (min-width:1080px){aside.controls{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);align-self:start;max-height:calc(100vh - 24px);overflow:auto;padding-right:4px}}
+details.grp{background:var(--panel);border:1px solid var(--rule);border-radius:6px;margin-bottom:8px}
+details.grp>summary{cursor:pointer;padding:9px 12px;font:600 14px var(--f-head);list-style:none;display:flex;justify-content:space-between;gap:8px}
+details.grp>summary::after{content:"+";color:var(--muted);font-family:var(--f-mono)}
+details.grp[open]>summary::after{content:"−"}
+.grp .body{padding:4px 12px 12px;display:grid;gap:8px;grid-template-columns:minmax(0,1fr)}
+.grp .body>*,.grp .body div{min-width:0}
+select{max-width:100%}
+.ctl select{width:100%}
+.ctl{display:grid;grid-template-columns:minmax(0,1fr) 84px;gap:2px 8px;align-items:center}
+.ctl label{font-size:13px;color:var(--ink)}
+.ctl label small{color:var(--muted);font-family:var(--f-mono);font-size:11px;margin-left:4px}
+.ctl input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--accent);margin:0}
+.ctl input[type=number],.num-in{width:100%;font:13px var(--f-mono);padding:3px 6px;border:1px solid var(--rule);border-radius:4px;background:var(--soft);color:var(--ink);text-align:right}
+.note{font-size:12.5px;color:var(--muted)}
+.sublab{font:500 11px var(--f-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin-top:6px}
+select,.btn{font:500 13px var(--f-body);border:1px solid var(--rule);border-radius:5px;background:var(--panel);color:var(--ink);padding:5px 9px}
+.btn{cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--panel)}
+.row2{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.row2 label{font-size:12px;color:var(--muted);display:grid;gap:2px}
+.chk{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:13px}
+main.res{min-width:0;display:grid;gap:16px;align-content:start}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:14px 16px;min-width:0}
+.card h2{font:600 16px var(--f-head);margin:0 0 8px}
+.verdict{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.pill{font:600 12px var(--f-mono);letter-spacing:.04em;text-transform:uppercase;padding:4px 9px;border-radius:999px;white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.bad{background:var(--bad-soft);color:var(--bad)} .pill.warn{background:var(--warn-soft);color:var(--warn)}
+.verdict ul{margin:0;padding-left:18px;font-size:13.5px;min-width:0;flex:1}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.kpi{border-left:3px solid var(--rule);padding:2px 10px}
+.kpi.ok{border-color:var(--ok)} .kpi.bad{border-color:var(--bad)} .kpi.warn{border-color:var(--warn)}
+.kpi .v{font:600 20px var(--f-mono);font-variant-numeric:tabular-nums}
+.kpi .l{font-size:12.5px;color:var(--muted)}
+.tq{display:grid;gap:12px}
+.tqrow{display:grid;grid-template-columns:80px minmax(0,1fr);gap:10px;align-items:center}
+.tqrow .name{font:600 13px var(--f-mono)}
+.bar{position:relative;height:30px;background:var(--soft);border-radius:4px;overflow:hidden}
+.bar .fill{position:absolute;left:0;top:7px;height:16px;background:var(--accent);opacity:.85;border-radius:2px}
+.bar .req{position:absolute;left:0;top:11px;height:8px;background:var(--plot);border-radius:2px}
+.bar .mark{position:absolute;top:0;bottom:0;width:2px}
+.bar .mark.lim{background:var(--warn)} .bar .mark.stall{background:var(--bad)} .bar .mark.fifth{background:var(--muted);opacity:.7}
+.tqtxt{grid-column:2;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:8px;margin-right:5px;vertical-align:middle;border-radius:2px}
+.views{display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:860px){.views{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);align-items:start}}
+svg{display:block;width:100%;height:auto;font-family:var(--f-mono)}
+.svgbox{background:var(--soft);border-radius:4px;max-width:100%}
+.tw{overflow-x:auto;max-width:100%}
+table{border-collapse:collapse;font-size:12.5px;width:100%}
+th,td{padding:5px 8px;border-bottom:1px solid var(--rule);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+th{font-weight:600;color:var(--muted);background:var(--soft);position:sticky;top:0}
+th:first-child,td:first-child{text-align:left}
+tr.sel td{background:var(--accent-soft)}
+tbody tr{cursor:pointer}
+td.ok{color:var(--ok)} td.bad{color:var(--bad)}
+.info{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px 12px;font-size:12.5px;margin-top:8px}
+.info b{font-family:var(--f-mono);font-weight:500}
+.prog{height:4px;background:var(--soft);border-radius:2px;overflow:hidden;margin-top:6px}
+.prog div{height:100%;background:var(--accent);width:0}
+textarea{width:100%;min-height:90px;font:12px var(--f-mono);border:1px solid var(--rule);border-radius:4px;background:var(--soft);color:var(--ink);padding:6px}
+.method p,.method li{font-size:13.5px;max-width:78ch}
+.method code{font-family:var(--f-mono);font-size:12.5px}
+.busy{font:500 12px var(--f-mono);color:var(--muted)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+
+.optgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px 12px;margin:8px 0}
+.optgrid label{font-size:12px;color:var(--muted);display:grid;gap:2px}
+.chips{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:13px;margin:2px 0 6px}
+.chips label{display:inline-flex;gap:4px;align-items:center;white-space:nowrap}
+.rowlab{font:500 11px var(--f-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin-top:8px}
+.optlog{font:12px var(--f-mono);color:var(--muted);max-height:96px;overflow:auto;white-space:pre-wrap;margin-top:6px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.chip-eng{font:500 12px var(--f-mono)}
+svg .pt{cursor:pointer}
+</style>
+
+<div class="app">
+<header class="top">
+  <div>
+    <h1>Simulateur de pattes Gr2</h1>
+    <p class="sub">Réglez une patte, ses servos, les masses et le CdG : le modèle vérifie les 14 phases du cahier des charges (marche avant et arrière, obstacle 30 mm, rotation, saisie) et montre stabilité, couples et contraintes actives. Mêmes équations que le programme d'optimisation <code>gr2_dim</code>.</p>
+  </div>
+  <div class="toolbar">
+    <span class="lab">CdG</span>
+    <div class="seg" id="seg-sc"><button data-v="S1" aria-pressed="true">S1 nominal</button><button data-v="S2" aria-pressed="false">S2 pire cas</button></div>
+    <span class="lab">Coxa</span>
+    <div class="seg" id="seg-mount"><button data-v="dedans">dedans</button><button data-v="dehors">dehors</button></div>
+    <span class="lab">Pattes</span>
+    <div class="seg" id="seg-mode"><button data-v="exact" title="CdG des pattes calculé avec les servos choisis">exact</button><button data-v="programme" title="Comme l'optimiseur : servo de référence + borne ε_legs (prudent)">comme l'optimiseur</button></div>
+    <span class="busy" id="busy" aria-live="polite"></span>
+  </div>
+</header>
+
+<aside class="controls" id="controls" aria-label="Réglages"></aside>
+
+<main class="res">
+  <section class="card" aria-labelledby="t-opt" id="opt-card">
+    <h2 id="t-opt">Optimisation complète avec ces entrées</h2>
+    <p class="note" style="margin:0 0 6px">Lance le pipeline complet du rapport (Sobol → pré-filtre → évaluation exacte de chaque combinaison de servos → raffinement → Pareto 3D → Monte-Carlo → front robuste → coude et ε-contrainte) avec <b>toutes les entrées de ce simulateur</b> (châssis, masses, bras, catalogue, marges, montage, scénario S1/S2). Cliquez un point ou « Charger » pour l'ouvrir dans le simulateur.</p>
+    <div class="toolbar">
+      <span class="lab">Moteur</span>
+      <div class="seg" id="seg-eng"><button data-v="js" aria-pressed="true" title="Port JavaScript du pipeline, exécuté dans votre navigateur (résolution réduite par défaut)">Navigateur (JS)</button><button data-v="py" aria-pressed="false" id="eng-py" disabled title="Nécessite python serve.py">Python complet (serveur local)</button></div>
+      <span class="busy" id="eng-msg"></span>
+    </div>
+    <div class="optgrid">
+      <label>Points de Sobol<input class="num-in" type="number" id="o-nsobol" min="64" step="64"></label>
+      <label>Tours de raffinement<input class="num-in" type="number" id="o-rounds" min="0" max="4"></label>
+      <label>Points par point du front<input class="num-in" type="number" id="o-pp" min="1" max="48"></label>
+      <label>Tirages Monte-Carlo<input class="num-in" type="number" id="o-nmc" min="0" max="500"></label>
+      <label>Grille de balancement n×n<input class="num-in" type="number" id="o-sway" min="3" max="41" step="2"></label>
+      <label>Graine<input class="num-in" type="number" id="o-seed" min="1"></label>
+    </div>
+    <details class="grp" style="margin-bottom:6px"><summary>Bornes de recherche (variables de décision)</summary><div class="body"><div class="row2" id="o-bounds"></div></div></details>
+    <div class="rowlab">Servos autorisés par articulation (4 exemplaires identiques requis : le stock est appliqué)</div>
+    <div id="o-allowed"></div>
+    <div class="toolbar"><button class="btn" id="o-screen">Pré-sélectionner les servos possibles (indicatif)</button><span class="note" id="o-combos"></span></div>
+    <div class="toolbar" style="margin-top:8px"><button class="btn primary" id="o-run">Lancer l'optimisation</button><button class="btn" id="o-stop" disabled>Arrêter</button><span class="busy" id="o-state"></span></div>
+    <div class="prog"><div id="o-prog"></div></div>
+    <div class="optlog" id="o-log" aria-live="polite"></div>
+    <div id="o-out"></div>
+  </section>
+  <section class="card" aria-labelledby="t-verdict">
+    <h2 id="t-verdict">Verdict</h2>
+    <div class="verdict" id="verdict"></div>
+  </section>
+  <section class="card" aria-labelledby="t-kpi">
+    <h2 id="t-kpi">Résultats principaux</h2>
+    <div class="kpis" id="kpis"></div>
+  </section>
+  <section class="card" aria-labelledby="t-cmp" id="cmp-card">
+    <h2 id="t-cmp">Contraintes et comparaison à l'optimum</h2>
+    <p class="note" style="margin:0 0 8px">Lecture « problème inverse » : vous fixez les variables (L₂, L₃, α, β, ξ, servos, masses, châssis…), le modèle donne chaque contrainte avec sa marge, les trois objectifs (f₁ masse des pattes, f₂ NESM, f₃ couple C₂) et la position du design par rapport au front de Pareto trouvé par l'optimiseur.</p>
+    <div class="toolbar" style="margin-bottom:8px"><span class="lab">Référence</span>
+      <div class="seg" id="seg-ref"><button data-v="saved" aria-pressed="true" title="Fronts calculés par gr2_dim (Python, 8192 points, Monte-Carlo) avec la configuration de config.yaml">Résultats sauvegardés</button><button data-v="last" aria-pressed="false" id="ref-last" disabled title="Front de la dernière exécution de la carte « Optimisation complète »">Dernière optimisation</button></div></div>
+    <div id="cmp-warn"></div><div id="cmp-obj"></div><div id="cmp-ref"></div><div class="tw" id="cmp-con"></div>
+  </section>
+  <section class="card" aria-labelledby="t-tq">
+    <h2 id="t-tq">Couples par articulation</h2>
+    <div class="tq" id="torques"></div>
+    <div class="legend" style="margin-top:10px">
+      <span><i style="background:var(--accent)"></i>couple max au balancement retenu</span>
+      <span><i style="background:var(--plot)"></i>couple minimal requis</span>
+      <span><i style="background:var(--warn)"></i>limite = frac × C<sub>blocage</sub> / SF</span>
+      <span><i style="background:var(--bad)"></i>couple de blocage</span>
+      <span><i style="background:var(--muted)"></i>1/5 du blocage (Robotis)</span>
+    </div>
+  </section>
+  <section class="card" aria-labelledby="t-view">
+    <h2 id="t-view">Phase et vues</h2>
+    <div class="toolbar" style="margin-bottom:8px">
+      <label class="lab" for="sel-phase">Phase</label><select id="sel-phase"></select>
+      <label class="lab" for="sel-state">État</label><select id="sel-state"></select>
+      <label class="lab" for="sel-leg">Patte (vue de côté)</label><select id="sel-leg"><option value="0">FL avant-gauche</option><option value="1">FR avant-droite</option><option value="2">RL arrière-gauche</option><option value="3">RR arrière-droite</option></select>
+    </div>
+    <div class="views">
+      <div><div class="svgbox" id="topview"></div><p class="note" style="margin:4px 0 0">Vue de dessus dans le repère du corps. Zone bleue : polygone d'appui ; rectangle rouge : boîte des CdG possibles ; flèche violette : balancement du corps ; pied orange : posé sur l'obstacle ; pointillé : patte en l'air. Le pourcentage est la part de poids maximale portée par chaque pied.</p></div>
+      <div class="svgbox" id="sideview"></div>
+    </div>
+    <div class="info" id="stateinfo"></div>
+  </section>
+  <section class="card" aria-labelledby="t-ph">
+    <h2 id="t-ph">Les 14 phases</h2>
+    <p class="note" style="margin:0 0 6px">Pour chaque phase, le corps peut se décaler (balancement) sur une grille ; on retient la position admissible qui maximise le NESM. Cliquez une ligne pour l'afficher.</p>
+    <div class="tw" id="phases"></div>
+  </section>
+  <section class="card" aria-labelledby="t-sw">
+    <h2 id="t-sw">Impact d'un paramètre</h2>
+    <div class="toolbar">
+      <label class="lab" for="sw-param">Paramètre</label><select id="sw-param"></select>
+      <label class="lab" for="sw-min">de</label><input class="num-in" style="width:80px" type="number" id="sw-min">
+      <label class="lab" for="sw-max">à</label><input class="num-in" style="width:80px" type="number" id="sw-max">
+      <label class="lab" for="sw-n">points</label><input class="num-in" style="width:60px" type="number" id="sw-n" value="21" min="3" max="81">
+      <button class="btn primary" id="sw-run">Calculer</button>
+    </div>
+    <div class="prog"><div id="sw-prog"></div></div>
+    <div id="sw-chart" style="margin-top:8px"></div>
+    <p class="note" id="sw-note"></p>
+  </section>
+  <section class="card method" aria-labelledby="t-m">
+    <h2 id="t-m">Modèle, hypothèses et validation</h2>
+    <div id="method"></div>
+  </section>
+</main>
+</div>
+
+<script id="gr2-model">/*MODEL*/</script>
+<script id="gr2-opt">/*OPT*/</script>
+<script id="gr2-cmp">/*CMP*/</script>
+<script>
+"use strict";
+const M = Gr2Model;
+const DEFAULT_P = /*CONFIG*/;
+const VALID = /*VALIDATION*/;
+const VALID_OPT = /*VALIDATION_OPT*/;
+const VALID_PIPE = /*VALIDATION_PIPE*/;
+const REF_FRONTS = /*REF_FRONTS*/;
+const VALID_AUDIT = /*VALIDATION_AUDIT*/;
+const PRESETS = {
+ "Recommandé : dedans, pire cas S2 (compromis)": {
+  "mount": "dedans",
+  "sc": "S2",
+  "x": {
+   "L2": 60.08,
+   "L3": 71.92,
+   "alpha": 10.55,
+   "beta": 99.76,
+   "xi": 77.32
+  },
+  "servos": [
+   "SG90",
+   "S3306",
+   "S-U400"
+  ]
+ },
+ "Dedans, S2, couple C2 minimal avec NESM ≥ 2 mm": {
+  "mount": "dedans",
+  "sc": "S2",
+  "x": {
+   "L2": 51.96,
+   "L3": 67.91,
+   "alpha": 5.55,
+   "beta": 102.71,
+   "xi": 70.49
+  },
+  "servos": [
+   "S3306",
+   "S3306",
+   "S-U400"
+  ]
+ },
+ "Dedans, CdG nominal S1 (compromis)": {
+  "mount": "dedans",
+  "sc": "S1",
+  "x": {
+   "L2": 69.86,
+   "L3": 85.26,
+   "alpha": 20.97,
+   "beta": 97.06,
+   "xi": 70.38
+  },
+  "servos": [
+   "S-U400",
+   "S3306",
+   "S-U400"
+  ]
+ },
+ "Dehors, pire cas S2 (compromis)": {
+  "mount": "dehors",
+  "sc": "S2",
+  "x": {
+   "L2": 49.3,
+   "L3": 87.38,
+   "alpha": 6.56,
+   "beta": 108.35,
+   "xi": 80.53
+  },
+  "servos": [
+   "S-U400",
+   "S3306",
+   "S-U400"
+  ]
+ },
+ "Ancien design ξ = 17° (dedans, châssis 230×190)": {
+  "mount": "dedans",
+  "sc": "S2",
+  "x": {
+   "L2": 78.74,
+   "L3": 125.48,
+   "alpha": 48.23,
+   "beta": 72.63,
+   "xi": 17.4
+  },
+  "servos": [
+   "S-U400",
+   "S3306",
+   "S3306"
+  ],
+  "chassis": [
+   230,
+   190
+  ]
+ },
+ "Recommandé, mais ξ = 45°": {
+  "mount": "dedans",
+  "sc": "S2",
+  "x": {
+   "L2": 60.08,
+   "L3": 71.92,
+   "alpha": 10.55,
+   "beta": 99.76,
+   "xi": 45
+  },
+  "servos": [
+   "SG90",
+   "S3306",
+   "S-U400"
+  ]
+ }
+};
+const clone = (o) => JSON.parse(JSON.stringify(o));
+const nf = (v, d = 1) => (v === null || v === undefined || !isFinite(v)) ? "—" : v.toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d });
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+// ------------------------------------------------------------------ etat
+const S = {
+  p: clone(DEFAULT_P), x: Object.assign({}, PRESETS[Object.keys(PRESETS)[0]].x), sc: PRESETS[Object.keys(PRESETS)[0]].sc, mode: "exact",
+  combo: null, offsets: [0, 0, 0], sel: { phase: 0, state: 1, leg: 1 }, r: null,
+};
+S.p.chassis.mount = PRESETS[Object.keys(PRESETS)[0]].mount;
+S.p.gabarit = S.p.gabarit ?? 400;
+S.p.gabarit_min = S.p.gabarit_min ?? 0;
+function idx(name) { return S.p.servos.findIndex((s) => s.name === name); }
+S.combo = PRESETS[Object.keys(PRESETS)[0]].servos.map(idx);
+
+function getPath(path) { const [root, ...ks] = path.split("."); let o = root === "x" ? S.x : S.p; for (const k of ks) o = o[k]; return o; }
+function setPath(path, v) {
+  const [root, ...ks] = path.split("."); let o = root === "x" ? S.x : S.p;
+  for (let i = 0; i < ks.length - 1; i++) o = o[ks[i]]; o[ks[ks.length - 1]] = v;
+}
+
+// ------------------------------------------------------------- reglages
+const GROUPS = [
+  { id: "g-leg", title: "Patte et posture de repos", open: true, items: [
+    ["x.L2", "L₂ fémur (C2 → genou)", "mm", 20, 200, 0.5], ["x.L3", "L₃ tibia (genou → pied)", "mm", 40, 260, 0.5],
+    ["p.leg.L1", "L₁ coxa (C1 → C2)", "mm", 5, 100, 0.5],
+    ["x.alpha", "α élévation du fémur au repos", "°", -10, 85, 0.1], ["x.beta", "β inclinaison du tibia au repos", "°", 5, 120, 0.1],
+    ["x.xi", "ξ orientation vue de dessus (0 = latéral)", "°", 0, 90, 0.1]] },
+  { id: "g-servo", title: "Servos et couples", open: true, custom: "servos" },
+  { id: "g-ch", title: "Châssis", items: [
+    ["p.chassis.N_ch", "Longueur N (x)", "mm", 100, 400, 1], ["p.chassis.M_ch", "Largeur M (y)", "mm", 100, 400, 1],
+    ["p.chassis.c", "Retrait de l'axe (C1 ou C2) au bord", "mm", 0, 60, 0.5], ["p.chassis.e", "Hauteur de l'axe C2 au-dessus du dessous", "mm", 0, 60, 0.5],
+    ["p.chassis.overhang_C2", "Débord max de l'axe C2 (dedans)", "mm", 0, 60, 0.5]] },
+  { id: "g-mass", title: "Masses et CdG (châssis, batterie, pièces)", items: [
+    ["p.body.chassis.m", "Châssis + câbles + électronique", "kg", 0.2, 3, 0.01], ["p.body.chassis.x", "CdG châssis x", "mm", -100, 100, 1],
+    ["p.body.chassis.y", "CdG châssis y", "mm", -100, 100, 1], ["p.body.chassis.z_rel", "CdG châssis z (depuis le dessous)", "mm", 0, 100, 1],
+    ["p.body.battery.m", "Batterie", "kg", 0.05, 2, 0.01], ["p.body.battery.x", "CdG batterie x (S1)", "mm", -120, 120, 1],
+    ["p.body.battery.y", "CdG batterie y (S1)", "mm", -100, 100, 1], ["p.body.battery.z_rel", "CdG batterie z (S1)", "mm", 0, 100, 1],
+    "Zone possible de la batterie (S2)",
+    ["p.body.battery_zone.x.0", "x min", "mm", -150, 150, 1], ["p.body.battery_zone.x.1", "x max", "mm", -150, 150, 1],
+    ["p.body.battery_zone.y.0", "y min", "mm", -100, 100, 1], ["p.body.battery_zone.y.1", "y max", "mm", -100, 100, 1],
+    ["p.body.battery_zone.z_rel.0", "z min", "mm", 0, 100, 1], ["p.body.battery_zone.z_rel.1", "z max", "mm", 0, 100, 1],
+    ["p.body.eps_cdg_xy", "Incertitude CdG en x, y (S2)", "mm", 0, 40, 0.5], ["p.body.eps_cdg_z", "Incertitude CdG en z (S2)", "mm", 0, 40, 0.5],
+    "Pièces des pattes",
+    ["p.leg.seg_lin_mass", "Masse linéique des segments", "kg/m", 0.02, 0.6, 0.001], ["p.leg.bracket_mass", "Équerres par articulation", "kg", 0, 0.08, 0.001],
+    ["p.leg.foot_mass", "Pied", "kg", 0, 0.08, 0.001], ["p.leg.foot_diam", "Diamètre du pied", "mm", 5, 50, 1]] },
+  { id: "g-arm", title: "Bras (modèle à 3 masses)", custom: "arm" },
+  { id: "g-task", title: "Tâches et allure témoin", items: [
+    ["p.task.obstacle", "Hauteur d'obstacle", "mm", 0, 60, 1], ["p.task.dh_lift", "Marge de levée au-dessus de l'obstacle", "mm", 0, 50, 1],
+    ["p.task.h_margin", "Marge de garde au sol (h ≥ obstacle + marge)", "mm", 0, 40, 1], ["p.task.stroke", "Course du pied R_s", "mm", 10, 100, 1],
+    ["p.task.yaw_step", "Pas de rotation sur place", "°", 0, 30, 0.5], ["p.task.accel", "Accélération de référence du corps", "m/s²", 0, 3, 0.05],
+    ["p.task.sway_max", "Balancement max du corps", "mm", 0, 120, 1], ["p.task.sway_n", "Grille de balancement (n × n)", "", 1, 41, 2]] },
+  { id: "g-marg", title: "Limites d'angles et marges", items: [
+    ["p.margins.theta3_min", "θ₃ min (genou)", "°", 0, 90, 1], ["p.margins.theta3_max", "θ₃ max (genou)", "°", 90, 180, 1],
+    ["p.margins.joint_margin", "Marge aux butées des servos", "°", 0, 30, 1], ["p.margins.reach_margin", "Marge de portée (tendue / repliée)", "mm", 0, 30, 0.5],
+    ["p.margins.chassis_clearance", "Pied hors du châssis d'au moins", "mm", 0, 40, 1], ["p.margins.feet_clearance", "Écart min entre pattes d'un côté", "mm", 0, 80, 1],
+    ["p.margins.servo_spacing", "Écart min entre axes C1", "mm", 0, 120, 1], ["p.margins.eps_foot", "Erreur de position du pied ε_pied", "mm", 0, 20, 0.5],
+    ["p.margins.s_min", "Exigence : SSM corrigée ≥ s_min", "mm", -10, 30, 0.5], ["p.margins.nesm_min", "Exigence : NESM ≥", "mm", 0, 10, 0.1],
+    ["p.body.mass_robot_max_sans_bras", "Masse max du robot sans bras", "kg", 2, 8, 0.05], ["p.gabarit", "Gabarit (côté du carré)", "mm", 200, 600, 5], ["p.gabarit_min", "Empreinte minimale imposée (0 = libre)", "mm", 0, 400, 5]] },
+  { id: "g-cfg", title: "Préréglages et configuration", custom: "cfg" },
+];
+
+function ctlHTML(path, label, unit, mn, mx, st) {
+  const id = "c-" + path.replace(/\./g, "-");
+  const v = getPath(path);
+  return `<div class="ctl"><label for="${id}">${esc(label)}${unit ? `<small>${esc(unit)}</small>` : ""}</label>
+    <input type="number" id="${id}" data-path="${path}" value="${v}" step="${st}">
+    <input type="range" id="${id}-r" data-path="${path}" min="${mn}" max="${mx}" step="${st}" value="${v}" aria-label="${esc(label)}"></div>`;
+}
+function buildControls() {
+  const host = document.getElementById("controls"); let h = "";
+  for (const g of GROUPS) {
+    h += `<details class="grp" id="${g.id}" ${g.open ? "open" : ""}><summary>${esc(g.title)}</summary><div class="body">`;
+    if (g.items) for (const it of g.items) h += typeof it === "string" ? `<div class="sublab">${esc(it)}</div>` : ctlHTML(...it);
+    if (g.custom) h += `<div id="${g.id}-custom"></div>`;
+    h += `</div></details>`;
+  }
+  host.innerHTML = h;
+  buildServos(); buildArm(); buildCfg();
+  host.querySelectorAll("input[data-path]").forEach((el) => el.addEventListener("input", onCtl));
+}
+function onCtl(e) {
+  const el = e.target, path = el.dataset.path, v = parseFloat(el.value);
+  if (!isFinite(v)) return;
+  setPath(path, path === "p.task.sway_n" ? Math.max(1, Math.round(v)) : v);
+  const id = "c-" + path.replace(/\./g, "-");
+  const a = document.getElementById(id), b = document.getElementById(id + "-r");
+  if (a && a !== el) a.value = v; if (b && b !== el) b.value = v;
+  schedule();
+}
+function syncControls() {
+  document.querySelectorAll("#controls input[data-path]").forEach((el) => { el.value = getPath(el.dataset.path); });
+  buildServos(); buildArm();
+  setSeg("seg-sc", S.sc); setSeg("seg-mount", S.p.chassis.mount); setSeg("seg-mode", S.mode);
+}
+
+function buildServos() {
+  const host = document.getElementById("g-servo-custom"); const L = S.p.servos;
+  const opt = (sel) => L.map((s, i) => `<option value="${i}" ${i === sel ? "selected" : ""}>${esc(s.name)} — ${nf(s.C_stall, 2)} N·m, ${nf(s.mass * 1000, 0)} g</option>`).join("");
+  let h = `<div class="note">Couple utilisable = frac × C<sub>blocage</sub> / SF. Il faut 4 unités identiques par articulation (stock).</div>`;
+  ["C1 (lacet, axe vertical)", "C2 (épaule)", "C3 (genou)"].forEach((t, j) => {
+    h += `<div class="ctl"><label for="srv-${j}">${t}</label><span></span><select id="srv-${j}" style="grid-column:1/-1">${opt(S.combo[j])}</select></div>`;
+  });
+  h += `<div class="toolbar"><button class="btn" id="srv-auto">Servos les plus légers admissibles</button></div><div class="note" id="srv-auto-msg"></div>`;
+  h += ctlHTML("p.frac_couple", "frac : part du couple de blocage utilisable", "", 0.1, 1, 0.01);
+  h += ctlHTML("p.margins.SF", "SF : coefficient de sécurité", "", 1, 3, 0.05);
+  h += `<div class="sublab">Catalogue (modifiable)</div><div class="tw"><table><thead><tr><th>nom</th><th>C<sub>bloc</sub> N·m</th><th>masse kg</th><th>course °</th><th>stock</th></tr></thead><tbody>`;
+  L.forEach((s, i) => {
+    h += `<tr><td><input class="num-in" style="text-align:left;width:86px" data-srv="${i}" data-k="name" value="${esc(s.name)}" aria-label="nom"></td>
+      <td><input class="num-in" style="width:64px" type="number" step="0.01" data-srv="${i}" data-k="C_stall" value="${s.C_stall}" aria-label="couple de blocage"></td>
+      <td><input class="num-in" style="width:64px" type="number" step="0.001" data-srv="${i}" data-k="mass" value="${s.mass}" aria-label="masse"></td>
+      <td><input class="num-in" style="width:56px" type="number" step="1" data-srv="${i}" data-k="range" value="${s.range}" aria-label="course"></td>
+      <td><input class="num-in" style="width:52px" type="number" step="1" data-srv="${i}" data-k="stock" value="${s.stock ?? ""}" placeholder="?" aria-label="stock"></td></tr>`;
+  });
+  h += `</tbody></table></div><div class="toolbar"><button class="btn" id="srv-add">Ajouter un servo</button></div>`;
+  h += `<div class="sublab">Position du CdG des servos (mode exact)</div><div class="note">Décalage le long du segment qui part de l'axe (0 = sur l'axe, comme l'optimiseur).</div><div class="row2">`;
+  ["C1 → C2", "C2 → genou", "genou → pied"].forEach((t, j) => { h += `<label>${t} (mm)<input class="num-in" type="number" step="1" id="off-${j}" value="${S.offsets[j]}"></label>`; });
+  h += `</div>`;
+  host.innerHTML = h;
+  [0, 1, 2].forEach((j) => document.getElementById("srv-" + j).addEventListener("change", (e) => { S.combo[j] = +e.target.value; schedule(); }));
+  [0, 1, 2].forEach((j) => document.getElementById("off-" + j).addEventListener("input", (e) => { S.offsets[j] = parseFloat(e.target.value) || 0; schedule(); }));
+  host.querySelectorAll("input[data-srv]").forEach((el) => el.addEventListener("change", (e) => {
+    const i = +e.target.dataset.srv, k = e.target.dataset.k; let v = e.target.value;
+    if (k === "name") S.p.servos[i].name = v || `servo ${i + 1}`;
+    else if (k === "stock") S.p.servos[i].stock = v === "" ? null : Math.max(0, Math.round(+v));
+    else S.p.servos[i][k] = parseFloat(v);
+    buildServos(); schedule();
+  }));
+  host.querySelectorAll("input[data-path]").forEach((el) => el.addEventListener("input", onCtl));
+  document.getElementById("srv-add").addEventListener("click", () => { S.p.servos.push({ name: `perso ${S.p.servos.length + 1}`, C_stall: 1.0, mass: 0.05, range: 180, stock: null }); buildServos(); });
+  document.getElementById("srv-auto").addEventListener("click", autoServos);
+}
+
+function buildArm() {
+  const host = document.getElementById("g-arm-custom"); const a = S.p.body.arm_model, b = S.p.body;
+  let h = `<div class="note">Épaule à la fixation, coude à a₁, pince à a₁ + a₂ ; φ₁ depuis l'horizontale vers l'avant, φ₂ relatif. L'objet est dans la pince.</div>`;
+  h += [["p.body.arm_model.mount_from_front", "Épaule : retrait depuis le bord avant", "mm", 0, 150, 1], ["p.body.arm_model.mount_y", "Épaule : y", "mm", -80, 80, 1],
+    ["p.body.arm_model.mount_z_rel", "Épaule : z (depuis le dessous)", "mm", 0, 150, 1], ["p.body.arm_model.a1", "a₁ épaule → coude", "mm", 0, 250, 1],
+    ["p.body.arm_model.a2", "a₂ coude → pince", "mm", 0, 250, 1], ["p.body.arm_model.m_base", "Masse à l'épaule", "kg", 0, 1, 0.01],
+    ["p.body.arm_model.m_elbow", "Masse au coude", "kg", 0, 1, 0.01], ["p.body.arm_model.m_tip", "Masse à la pince", "kg", 0, 1, 0.01],
+    ["p.body.object_mass", "Objet", "kg", 0, 0.5, 0.01]].map((it) => ctlHTML(...it)).join("");
+  h += `<div class="sublab">Postures</div><div class="tw"><table><thead><tr><th>posture</th><th>φ₁ °</th><th>φ₂ °</th><th>objet</th><th>CdG bras x, z</th></tr></thead><tbody>`;
+  for (const [nm, ps] of Object.entries(a.postures)) {
+    const [, g] = M.armPoints(S.p, nm).reduce((acc, [m, P]) => [acc[0] + m, acc[1].map((v, k) => v + m * P[k])], [0, [0, 0, 0]]);
+    const mt = M.armPoints(S.p, nm).reduce((s, q) => s + q[0], 0);
+    h += `<tr><td>${esc(nm)}</td><td><input class="num-in" style="width:60px" type="number" data-ap="${nm}" data-k="0" value="${ps.phi[0]}" aria-label="phi1 ${nm}"></td>
+      <td><input class="num-in" style="width:60px" type="number" data-ap="${nm}" data-k="1" value="${ps.phi[1]}" aria-label="phi2 ${nm}"></td>
+      <td><input type="checkbox" data-apo="${nm}" ${ps.obj ? "checked" : ""} aria-label="objet ${nm}"></td><td>${nf(g[0] / mt, 0)} ; ${nf(g[2] / mt, 0)}</td></tr>`;
+  }
+  h += `</tbody></table></div>`;
+  const names = Object.keys(a.postures);
+  const sel = (id, v) => `<select id="${id}">${names.map((n) => `<option ${n === v ? "selected" : ""}>${esc(n)}</option>`).join("")}</select>`;
+  h += `<div class="toolbar"><span class="lab">S1 marche</span>${sel("ap-walk", b.walk_posture)}<span class="lab">S1 saisie</span>${sel("ap-manip", b.manip_posture)}</div>`;
+  const chk = (key) => names.map((n) => `<label><input type="checkbox" data-s2="${key}" value="${n}" ${b[key].includes(n) ? "checked" : ""}> ${esc(n)}</label>`).join("");
+  h += `<div class="sublab">S2 : postures possibles en marche</div><div class="chk">${chk("walk_postures_S2")}</div>`;
+  h += `<div class="sublab">S2 : postures possibles en saisie</div><div class="chk">${chk("manip_postures_S2")}</div>`;
+  host.innerHTML = h;
+  host.querySelectorAll("input[data-path]").forEach((el) => el.addEventListener("input", (e) => { onCtl(e); clearTimeout(buildArm.t); buildArm.t = setTimeout(buildArm, 400); }));
+  host.querySelectorAll("input[data-ap]").forEach((el) => el.addEventListener("change", (e) => { a.postures[e.target.dataset.ap].phi[+e.target.dataset.k] = parseFloat(e.target.value) || 0; buildArm(); schedule(); }));
+  host.querySelectorAll("input[data-apo]").forEach((el) => el.addEventListener("change", (e) => { a.postures[e.target.dataset.apo].obj = e.target.checked; buildArm(); schedule(); }));
+  document.getElementById("ap-walk").addEventListener("change", (e) => { b.walk_posture = e.target.value; schedule(); });
+  document.getElementById("ap-manip").addEventListener("change", (e) => { b.manip_posture = e.target.value; schedule(); });
+  host.querySelectorAll("input[data-s2]").forEach((el) => el.addEventListener("change", (e) => {
+    const key = e.target.dataset.s2; const list = [...host.querySelectorAll(`input[data-s2="${key}"]:checked`)].map((q) => q.value);
+    if (!list.length) { e.target.checked = true; return; }
+    b[key] = list; schedule();
+  }));
+}
+
+function buildCfg() {
+  const host = document.getElementById("g-cfg-custom");
+  host.innerHTML = `<div class="toolbar">${Object.keys(PRESETS).map((k, i) => `<button class="btn" data-preset="${i}">${esc(k)}</button>`).join("")}</div>
+    <div class="toolbar"><button class="btn" id="cfg-reset">Revenir aux entrées par défaut</button><button class="btn" id="cfg-copy">Copier la configuration</button></div>
+    <label class="note" for="cfg-text">Coller une configuration (JSON copié ici) puis Appliquer :</label>
+    <textarea id="cfg-text" spellcheck="false"></textarea><div class="toolbar"><button class="btn" id="cfg-apply">Appliquer</button><span class="note" id="cfg-msg"></span></div>`;
+  host.querySelectorAll("[data-preset]").forEach((el) => el.addEventListener("click", () => applyPreset(Object.values(PRESETS)[+el.dataset.preset])));
+  document.getElementById("cfg-reset").addEventListener("click", () => { S.p = clone(DEFAULT_P); S.p.gabarit = 400; S.p.gabarit_min = 0; applyPreset(Object.values(PRESETS)[0]); });
+  document.getElementById("cfg-copy").addEventListener("click", () => {
+    const txt = JSON.stringify({ p: S.p, x: S.x, scenario: S.sc, mode: S.mode, combo: S.combo.map((i) => S.p.servos[i].name), offsets: S.offsets });
+    const ta = document.getElementById("cfg-text"); ta.value = txt;
+    const msg = document.getElementById("cfg-msg");
+    if (navigator.clipboard) navigator.clipboard.writeText(txt).then(() => { msg.textContent = "Copiée."; }, () => { ta.select(); msg.textContent = "Sélectionnée : copiez avec Ctrl+C."; });
+    else { ta.select(); msg.textContent = "Sélectionnée : copiez avec Ctrl+C."; }
+  });
+  document.getElementById("cfg-apply").addEventListener("click", () => {
+    const msg = document.getElementById("cfg-msg");
+    try {
+      const o = JSON.parse(document.getElementById("cfg-text").value);
+      if (!o.p || !o.x) throw new Error("il manque p ou x");
+      S.p = o.p; S.x = o.x; S.sc = o.scenario || "S1"; S.mode = o.mode || "exact"; S.offsets = o.offsets || [0, 0, 0];
+      S.combo = (o.combo || []).map((n) => idx(n)); if (S.combo.length !== 3 || S.combo.some((i) => i < 0)) S.combo = [0, 0, 0];
+      syncControls(); schedule(); msg.textContent = "Configuration appliquée.";
+    } catch (err) { msg.textContent = "JSON illisible : " + err.message; }
+  });
+}
+function applyPreset(pr) {
+  S.p.chassis.mount = pr.mount; S.sc = pr.sc; Object.assign(S.x, pr.x);
+  if (pr.chassis) { S.p.chassis.N_ch = pr.chassis[0]; S.p.chassis.M_ch = pr.chassis[1]; } else { S.p.chassis.N_ch = DEFAULT_P.chassis.N_ch; S.p.chassis.M_ch = DEFAULT_P.chassis.M_ch; }
+  S.combo = pr.servos.map((n) => idx(n));
+  syncControls(); schedule();
+}
+
+function setSeg(id, v) { document.querySelectorAll(`#${id} button`).forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.v === v))); }
+function bindSegs() {
+  const bind = (id, fn) => document.querySelectorAll(`#${id} button`).forEach((b) => b.addEventListener("click", () => { fn(b.dataset.v); setSeg(id, b.dataset.v); schedule(); }));
+  bind("seg-sc", (v) => { S.sc = v; }); bind("seg-mount", (v) => { S.p.chassis.mount = v; }); bind("seg-mode", (v) => { S.mode = v; });
+  setSeg("seg-sc", S.sc); setSeg("seg-mount", S.p.chassis.mount); setSeg("seg-mode", S.mode);
+}
+
+// ----------------------------------------------------- calcul (worker)
+let worker = null, reqId = 0, lastShown = 0;
+const pending = new Map();
+try {
+  const src = document.getElementById("gr2-model").textContent + `
+    self.onmessage = (e) => { const m = e.data;
+      try {
+        if (m.cmd === "eval") { const r = Gr2Model.evaluate(m.p, m.x, m.sc, m.opts); self.postMessage({ id: m.id, r }); }
+        else if (m.cmd === "auto") {
+          const out = [];
+          for (const cb of Gr2Model.combos(m.p)) {
+            const r = Gr2Model.evaluate(m.p, m.x, m.sc, Object.assign({}, m.opts, { combo: cb }));
+            out.push({ cb, adm: r.servo.admissible, f1: r.servo.f1, f2: r.servo.f2, f3: r.servo.f3 });
+          }
+          self.postMessage({ id: m.id, out });
+        } else if (m.cmd === "sweep") {
+          const res = [];
+          m.values.forEach((v, i) => {
+            const p = JSON.parse(JSON.stringify(m.p)), x = Object.assign({}, m.x);
+            const ks = m.path.split("."); let o = ks[0] === "x" ? x : p; for (let q = 1; q < ks.length - 1; q++) o = o[ks[q]]; o[ks[ks.length - 1]] = m.path === "p.task.sway_n" ? Math.round(v) : v;
+            if (m.path === "p.body.battery.x" && m.sc === "S2") p.body.battery_zone = { x: [v, v], y: [p.body.battery.y, p.body.battery.y], z_rel: [p.body.battery.z_rel, p.body.battery.z_rel] };
+            const r = Gr2Model.evaluate(p, x, m.sc, m.opts); const s = r.servo;
+            res.push({ v, adm: s.admissible, allPh: s.allPh, f2: s.f2, f3: s.f3, t3: s.tmin[2], f1: s.f1, pre: r.pre.ok });
+            self.postMessage({ id: m.id, progress: (i + 1) / m.values.length });
+          });
+          self.postMessage({ id: m.id, res });
+        }
+      } catch (err) { self.postMessage({ id: m.id, error: String(err && err.stack || err) }); }
+    };`;
+  worker = new Worker(URL.createObjectURL(new Blob([src], { type: "text/javascript" })));
+  worker.onmessage = (e) => { const m = e.data; const cb = pending.get(m.id); if (cb) cb(m); };
+} catch (err) { worker = null; }
+
+function call(msg, onMsg) {
+  const id = ++reqId; msg.id = id;
+  if (worker) { pending.set(id, (m) => { if (m.progress === undefined) pending.delete(id); onMsg(m); }); worker.postMessage(msg); return id; }
+  setTimeout(() => {   // repli sans worker : calcul sur le fil principal
+    try {
+      if (msg.cmd === "eval") onMsg({ id, r: M.evaluate(msg.p, msg.x, msg.sc, msg.opts) });
+      else if (msg.cmd === "auto") onMsg({ id, out: M.combos(msg.p).map((cb) => { const r = M.evaluate(msg.p, msg.x, msg.sc, Object.assign({}, msg.opts, { combo: cb })); return { cb, adm: r.servo.admissible, f1: r.servo.f1, f2: r.servo.f2, f3: r.servo.f3 }; }) });
+      else if (msg.cmd === "sweep") { const res = msg.values.map((v) => { const p = clone(msg.p), x = Object.assign({}, msg.x); const ks = msg.path.split("."); let o = ks[0] === "x" ? x : p; for (let q = 1; q < ks.length - 1; q++) o = o[ks[q]]; o[ks[ks.length - 1]] = v; if (msg.path === "p.body.battery.x" && msg.sc === "S2") p.body.battery_zone = { x: [v, v], y: [p.body.battery.y, p.body.battery.y], z_rel: [p.body.battery.z_rel, p.body.battery.z_rel] }; const s = M.evaluate(p, x, msg.sc, msg.opts).servo; return { v, adm: s.admissible, allPh: s.allPh, f2: s.f2, f3: s.f3, t3: s.tmin[2], f1: s.f1 }; }); onMsg({ id, res }); }
+    } catch (err) { onMsg({ id, error: String(err) }); }
+  }, 0);
+  return id;
+}
+function opts() { return { mode: S.mode, combo: S.combo.slice(), servo_offsets: S.offsets.slice() }; }
+let tmr = null;
+function schedule() {
+  clearTimeout(tmr); document.getElementById("busy").textContent = "calcul…";
+  tmr = setTimeout(() => {
+    const p = clone(S.p), x = Object.assign({}, S.x);
+    const id = call({ cmd: "eval", p, x, sc: S.sc, opts: opts() }, (m) => {
+      if (m.id < lastShown) return; lastShown = m.id;
+      if (m.error) { document.getElementById("busy").textContent = "erreur de calcul"; console.error(m.error); return; }
+      S.r = m.r; S.rp = p; document.getElementById("busy").textContent = ""; renderAll();
+    });
+  }, 140);
+}
+function autoServos() {
+  const msgEl = document.getElementById("srv-auto-msg"); msgEl.textContent = "Test de toutes les combinaisons autorisées par le stock…";
+  call({ cmd: "auto", p: clone(S.p), x: Object.assign({}, S.x), sc: S.sc, opts: opts() }, (m) => {
+    if (m.error) { msgEl.textContent = "Erreur : " + m.error; return; }
+    const ok = m.out.filter((q) => q.adm).sort((a, b) => a.f1 - b.f1 || b.f2 - a.f2);
+    if (!ok.length) { msgEl.textContent = `Aucune des ${m.out.length} combinaisons ne rend ce design admissible. Changez la géométrie, les masses ou le catalogue.`; return; }
+    S.combo = ok[0].cb.slice(); buildServos();
+    document.getElementById("srv-auto-msg").textContent = `${ok.length} combinaison(s) admissible(s) sur ${m.out.length} ; retenue : la plus légère (${nf(ok[0].f1, 3)} kg pour 4 pattes).`;
+    schedule();
+  });
+}
+
+// ------------------------------------------------------------- rendu
+function phaseView(r, pi) {
+  const ph = r.servo.phases[pi];
+  if (ph.ok) return ph.best;
+  let b = -1, bv = -Infinity;
+  r.nesm[pi].forEach((v, s) => { if (r.geoOk[pi][s] && v > bv) { bv = v; b = s; } });
+  if (b < 0) b = Math.floor(r.sw.length / 2);
+  return b;
+}
+function renderAll() {
+  const r = S.r; if (!r) return;
+  renderVerdict(r); renderKPIs(r); renderCompare(r); renderTorques(r); renderPhaseSelect(r); renderPhases(r); renderViews(r);
+}
+function reasonsOf(r, pi) {
+  const cnt = new Array(M.WHY.length).fill(0);
+  r.why[pi].forEach((w) => M.WHY.forEach((_, b) => { if (w & (1 << b)) cnt[b]++; }));
+  return M.WHY.map((n, b) => [n, cnt[b]]).filter((q) => q[1] > 0).sort((a, b) => b[1] - a[1]);
+}
+function renderVerdict(r) {
+  const s = r.servo, items = [];
+  const PRE = { G5_garde_sol: "garde au sol h trop faible", G3_theta3_repos: "θ₃ au repos hors limites", G6_gabarit: "dépasse le gabarit", G6b_empreinte_min: "empreinte plus petite que l'empreinte imposée", G7_axes_C1: "axes C1 trop proches", G10_chassis: "châssis plus grand que le gabarit" };
+  for (const [k, v] of Object.entries(r.pre.viol)) if (v > 0) {
+    let extra = "";
+    if (k === "G5_garde_sol") extra = ` (h = ${nf(r.geo.h, 1)} mm, exigé ≥ ${nf(S.rp.task.obstacle + S.rp.task.h_margin, 0)})`;
+    if (k === "G6_gabarit") extra = ` (${nf(r.pre.ext[0], 0)} × ${nf(r.pre.ext[1], 0)} mm)`;
+    if (k === "G6b_empreinte_min") extra = ` (${nf(Math.max(r.pre.ext[0], r.pre.ext[1]), 0)} mm, exigé ≥ ${nf(S.rp.gabarit_min, 0)})`;
+    if (k === "G3_theta3_repos") extra = ` (θ₃ = ${nf(r.pre.th3, 1)}°)`;
+    items.push(`<b>${k.split("_")[0]}</b> ${PRE[k]}${extra}`);
+  }
+  s.phases.forEach((ph, pi) => {
+    if (!ph.ok) {
+      const rs = reasonsOf(r, pi).slice(0, 2).map((q) => q[0]).join(", ");
+      items.push(`<b>${esc(ph.name)}</b> : aucune position du corps ne convient (sur ${r.sw.length} : ${ph.cnt.geo} rejetées par la géométrie${rs ? ` — ${rs}` : ""}, ${ph.cnt.stab} par la stabilité, ${ph.cnt.couple} par les couples)`);
+    }
+  });
+  if (!s.spanOk) s.span.forEach((v, j) => { if (v > s.rangeAvail[j]) items.push(`<b>Course C${j + 1}</b> : ${nf(v, 0)}° utilisés pour ${nf(s.rangeAvail[j], 0)}° disponibles (course − 2 × marge)`); });
+  if (!s.massOk) items.push(`<b>Masse</b> : robot sans bras ${nf(s.massRobot, 2)} kg > ${nf(S.rp.body.mass_robot_max_sans_bras, 2)} kg`);
+  const pill = s.admissible ? `<span class="pill ok">admissible</span>` : `<span class="pill bad">non admissible</span>`;
+  const warn = [];
+  s.fracBloc.forEach((f, j) => { if (isFinite(f) && f > 0.2) warn.push(`C${j + 1} doit fournir ${nf(100 * f, 0)} % du couple de blocage de son servo (Robotis conseille ≤ 20 %)`); });
+  const body = s.admissible ? `<ul><li>Toutes les phases ont au moins une position du corps qui respecte géométrie, stabilité et couples.</li>${warn.map((w) => `<li>${w}</li>`).join("")}</ul>` : `<ul>${items.map((i) => `<li>${i}</li>`).join("")}</ul>`;
+  document.getElementById("verdict").innerHTML = pill + body;
+}
+function kpi(label, val, cls = "") { return `<div class="kpi ${cls}"><div class="v">${val}</div><div class="l">${label}</div></div>`; }
+function renderKPIs(r) {
+  const s = r.servo, g = r.geo;
+  const f2c = !isFinite(s.f2) ? "bad" : s.f2 >= (S.rp.margins.nesm_cible ?? 2) ? "ok" : "warn";
+  const f3c = !isFinite(s.f3) ? "bad" : s.fracBloc[1] > 0.5 ? "warn" : "ok";
+  document.getElementById("kpis").innerHTML =
+    kpi(`NESM minimal (mm)${s.critical ? ` · phase critique ${esc(s.critical)}` : ""}`, nf(s.f2, 2), f2c) +
+    kpi(`couple requis en C2 (N·m) · ${isFinite(s.fracBloc[1]) ? nf(100 * s.fracBloc[1], 0) + " % du blocage" : "—"}`, nf(s.f3, 2), f3c) +
+    kpi("couple requis en C3 (N·m)", nf(s.tmin[2], 2), s.tmin[2] <= s.Cu[2] ? "ok" : "bad") +
+    kpi("masse des 4 pattes (kg)", nf(s.f1, 3)) +
+    kpi(`robot sans bras (kg) · max ${nf(S.rp.body.mass_robot_max_sans_bras, 1)}`, nf(s.massRobot, 2), s.massOk ? "ok" : "bad") +
+    kpi("masse portée M (kg)", nf(s.Mc, 2)) +
+    kpi(`garde au sol h (mm) · min ${nf(S.rp.task.obstacle + S.rp.task.h_margin, 0)}`, nf(g.h, 1), r.pre.viol.G5_garde_sol <= 0 ? "ok" : "bad") +
+    kpi("D au repos (mm)", nf(g.D0, 1)) +
+    kpi(`empreinte (mm) · gabarit ${nf(S.rp.gabarit, 0)}`, `${nf(r.pre.ext[0], 0)}×${nf(r.pre.ext[1], 0)}`, r.pre.viol.G6_gabarit <= 0 ? "ok" : "bad") +
+    kpi("θ₃ au repos (°)", nf(r.pre.th3, 1)) +
+    kpi("ε_legs (mm)", nf(r.epsLegsXY, 1));
+}
+function renderTorques(r) {
+  const s = r.servo; let h = "";
+  for (let j = 0; j < 3; j++) {
+    const req = j === 1 ? s.f3 : s.tmin[j], mx = s.tauMaxBest[j], lim = s.Cu[j], st = s.Cst[j];
+    const scale = Math.max(st, isFinite(req) ? req : 0, mx, 0.01) * 1.08;
+    const pc = (v) => `${Math.min(100, (100 * v) / scale)}%`;
+    h += `<div class="tqrow"><div class="name">C${j + 1}<br><span class="note">${esc(s.names[j])}</span></div>
+      <div class="bar" role="img" aria-label="C${j + 1} : requis ${nf(req, 2)} N·m, limite ${nf(lim, 2)} N·m, blocage ${nf(st, 2)} N·m">
+        <div class="fill" style="width:${pc(mx)}"></div><div class="req" style="width:${isFinite(req) ? pc(req) : 0}"></div>
+        <div class="mark lim" style="left:${pc(lim)}"></div><div class="mark stall" style="left:${pc(st)}"></div><div class="mark fifth" style="left:${pc(st / 5)}"></div></div>
+      <div class="tqtxt">max ${nf(mx, 2)} · requis ${nf(req, 2)} · limite ${nf(lim, 2)} · blocage ${nf(st, 2)} N·m · course utilisée ${nf(s.span[j], 0)}° / ${nf(s.rangeAvail[j], 0)}°</div></div>`;
+  }
+  document.getElementById("torques").innerHTML = h;
+}
+function renderPhaseSelect(r) {
+  const sp = document.getElementById("sel-phase"), ss = document.getElementById("sel-state");
+  if (S.sel.phase >= r.phases.length) S.sel.phase = 0;
+  sp.innerHTML = r.phases.map((ph, i) => `<option value="${i}" ${i === S.sel.phase ? "selected" : ""}>${esc(ph.name)}${r.servo.phases[i].ok ? "" : " ✕"}</option>`).join("");
+  const st = r.detail[S.sel.phase]; if (S.sel.state >= st.length) S.sel.state = 0;
+  ss.innerHTML = st.map((d, i) => `<option value="${i}" ${i === S.sel.state ? "selected" : ""}>${esc(d.label)}</option>`).join("");
+  document.getElementById("sel-leg").value = String(S.sel.leg);
+}
+function renderPhases(r) {
+  const s = r.servo;
+  let h = `<table><thead><tr><th>phase</th><th>état</th><th>balancement x ; y (mm)</th><th>NESM (mm)</th><th>SSM corr. (mm)</th><th>τ₁</th><th>τ₂</th><th>τ₃ (N·m)</th><th>τ₂ requis</th><th>rejets géom. / stab. / couple</th><th>cause géométrique principale</th></tr></thead><tbody>`;
+  s.phases.forEach((ph, pi) => {
+    const rs = reasonsOf(r, pi)[0];
+    h += `<tr data-pi="${pi}" class="${pi === S.sel.phase ? "sel" : ""}"><td>${esc(ph.name)}</td><td class="${ph.ok ? "ok" : "bad"}">${ph.ok ? "OK" : "aucune"}</td>
+      <td>${ph.ok ? `${nf(ph.sway[0], 0)} ; ${nf(ph.sway[1], 0)}` : "—"}</td><td>${ph.ok ? nf(ph.nesm, 2) : "—"}</td><td>${ph.ok ? nf(ph.ssmc, 1) : "—"}</td>
+      <td>${ph.ok ? nf(ph.tau[0], 2) : "—"}</td><td>${ph.ok ? nf(Math.max(ph.tau[1], ph.swC2), 2) : "—"}</td><td>${ph.ok ? nf(Math.max(ph.tau[2], ph.swC3), 2) : "—"}</td>
+      <td>${nf(ph.t2req, 2)}</td><td>${ph.cnt.geo} / ${ph.cnt.stab} / ${ph.cnt.couple}</td><td>${rs ? esc(rs[0]) + ` (${rs[1]})` : "—"}</td></tr>`;
+  });
+  h += `</tbody></table>`;
+  const el = document.getElementById("phases"); el.innerHTML = h;
+  el.querySelectorAll("tr[data-pi]").forEach((tr) => tr.addEventListener("click", () => { S.sel.phase = +tr.dataset.pi; S.sel.state = r.detail[S.sel.phase].length > 1 ? 1 : 0; renderPhaseSelect(r); renderPhases(r); renderViews(r); }));
+}
+
+function renderViews(r) {
+  const pi = S.sel.phase, j = S.sel.state, s = phaseView(r, pi);
+  const v = M.stateView(S.rp, r, pi, j, s);
+  const ph = r.servo.phases[pi];
+  // ---------- vue de dessus
+  const gab = S.rp.gabarit, half = gab / 2 + 75, W = 2 * half;
+  const X = (x) => x + half, Y = (y) => half - y;
+  const ch = S.rp.chassis;
+  let t = `<svg viewBox="0 0 ${W} ${W}" role="img" aria-label="Vue de dessus de la phase ${esc(ph.name)}">`;
+  t += `<rect x="${X(-gab / 2)}" y="${Y(gab / 2)}" width="${gab}" height="${gab}" fill="none" stroke="var(--muted)" stroke-dasharray="4 4" stroke-width="1"/>`;
+  t += `<text x="${X(-gab / 2) + 4}" y="${Y(gab / 2) + 12}" font-size="10" fill="var(--muted)">gabarit ${gab} mm (repère du corps)</text>`;
+  t += `<rect x="${X(-ch.N_ch / 2)}" y="${Y(ch.M_ch / 2)}" width="${ch.N_ch}" height="${ch.M_ch}" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.2"/>`;
+  const pts = v.feet.map((f) => `${X(f[0])},${Y(f[1])}`).join(" ");
+  t += `<polygon points="${pts}" fill="var(--poly)" stroke="var(--accent)" stroke-width="1.5"/>`;
+  // bras (projection)
+  const ap = M.armPoints(S.rp, r.detail[pi][j].cdg === "manip" ? S.rp.body.manip_posture : S.rp.body.walk_posture);
+  t += `<polyline points="${ap.slice(0, 3).map((q) => `${X(q[1][0])},${Y(q[1][1])}`).join(" ")}" fill="none" stroke="var(--muted)" stroke-width="3" stroke-linecap="round" opacity=".55"/><text x="${X(ap[2][1][0])}" y="${Y(ap[2][1][1]) - 6}" font-size="10" text-anchor="middle" fill="var(--muted)">bras</text>`;
+  for (let l = 0; l < 4; l++) {
+    const L = v.legs[l]; if (!L) continue;
+    const sw = v.swing === l;
+    t += `<line x1="${X(L.C1[0])}" y1="${Y(L.C1[1])}" x2="${X(L.C2[0])}" y2="${Y(L.C2[1])}" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"/>`;
+    t += `<polyline points="${X(L.C2[0])},${Y(L.C2[1])} ${X(L.knee[0])},${Y(L.knee[1])} ${X(L.rel[0])},${Y(L.rel[1])}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>`;
+    t += `<circle cx="${X(L.C1[0])}" cy="${Y(L.C1[1])}" r="3" fill="var(--ink)"/>`;
+    const onObs = L.zf > 0 && !sw;
+    t += `<circle cx="${X(L.rel[0])}" cy="${Y(L.rel[1])}" r="${S.rp.leg.foot_diam / 2}" fill="${sw ? "none" : onObs ? "var(--warn)" : "var(--accent)"}" stroke="${sw ? "var(--accent)" : "none"}" stroke-dasharray="${sw ? "3 2" : ""}" stroke-width="1.5"/>`;
+    const lab = M.LEG_NAMES[l] + (v.lamLeg[l] !== undefined ? ` ${nf(100 * v.lamLeg[l], 0)} %` : " (en l'air)");
+    t += `<text x="${X(L.rel[0]) + (L.rel[0] >= 0 ? -12 : 12)}" y="${Y(L.rel[1]) + (L.rel[1] >= 0 ? -14 : 22)}" font-size="11" text-anchor="${L.rel[0] >= 0 ? "end" : "start"}" fill="var(--ink)">${lab}</text>`;
+  }
+  // CdG et boite du pire cas
+  t += `<rect x="${X(v.Gc[0] - v.hxy[0])}" y="${Y(v.Gc[1] + v.hxy[1])}" width="${2 * v.hxy[0]}" height="${2 * v.hxy[1]}" fill="none" stroke="var(--box)" stroke-width="1.2" stroke-dasharray="3 2"/>`;
+  t += `<circle cx="${X(v.Gc[0])}" cy="${Y(v.Gc[1])}" r="4" fill="var(--box)"/><text x="${X(v.Gc[0]) + 7}" y="${Y(v.Gc[1]) - 6}" font-size="11" fill="var(--box)">CdG</text>`;
+  // balancement
+  t += `<line x1="${X(0)}" y1="${Y(0)}" x2="${X(v.sway[0])}" y2="${Y(v.sway[1])}" stroke="var(--plot)" stroke-width="1.5" marker-end="url(#ar)"/>`;
+  t += `<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--plot)"/></marker></defs>`;
+  t += `<text x="${X(0)}" y="${Y(-ch.M_ch / 2) + 14}" font-size="10" text-anchor="middle" fill="var(--muted)">x → avant ; y ↑ gauche</text>`;
+  t += `</svg>`;
+  document.getElementById("topview").innerHTML = t;
+  // ---------- vue de cote de la patte choisie
+  const l = S.sel.leg, L = v.legs[l];
+  let sv = "";
+  if (L) {
+    const H2 = r.geo.H2, L1 = S.rp.leg.L1;
+    const kx = L.L2 * Math.cos(L.al), kz = H2 + L.L2 * Math.sin(L.al);
+    const minX = -L1 - 70, maxX = Math.max(L.D, kx) + 60, maxZ = Math.max(kz, H2) + 30;
+    const Wd = 520, k = Math.min((Wd - 20) / (maxX - minX), 270 / (maxZ + 5)), Hd = Math.round((maxZ + 5) * k + 50);
+    const sx = (x) => 10 + (x - minX) * k, sz = (z) => 20 + (maxZ - z) * k;
+    sv = `<svg viewBox="0 0 ${Wd} ${Hd}" role="img" aria-label="Vue de côté de la patte ${M.LEG_NAMES[l]}">`;
+    sv += `<line x1="0" y1="${sz(0)}" x2="${Wd}" y2="${sz(0)}" stroke="var(--muted)" stroke-width="1.5"/>`;
+    if (L.zf > 0) sv += `<rect x="${sx(L.D - 25)}" y="${sz(L.zf)}" width="${(maxX - L.D + 25) * k}" height="${L.zf * k}" fill="var(--warn-soft)" stroke="var(--warn)"/>`;
+    sv += `<rect x="${sx(-L1 - 60)}" y="${sz(r.geo.h + 2 * S.rp.chassis.e)}" width="${(60 + L1 - 4) * k}" height="${2 * S.rp.chassis.e * k}" fill="var(--panel)" stroke="var(--ink)" stroke-width="1"/>`;
+    sv += `<text x="${sx(-L1 - 56)}" y="${sz(r.geo.h) + 14}" font-size="10" fill="var(--muted)">h = ${nf(r.geo.h, 0)} mm</text>`;
+    sv += `<polyline points="${sx(-L1)},${sz(H2)} ${sx(0)},${sz(H2)} ${sx(kx)},${sz(kz)} ${sx(L.D)},${sz(L.zf)}" fill="none" stroke="var(--accent)" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>`;
+    [[-L1, H2, "C1"], [0, H2, "C2"], [kx, kz, "C3"]].forEach(([a, b, n]) => { sv += `<circle cx="${sx(a)}" cy="${sz(b)}" r="4.5" fill="var(--ink)"/><text x="${sx(a) - 6}" y="${sz(b) - 9}" font-size="11" fill="var(--ink)">${n}</text>`; });
+    sv += `<circle cx="${sx(L.D)}" cy="${sz(L.zf)}" r="5" fill="var(--accent)"/>`;
+    sv += `<text x="${Math.min(sx(kx) + 26, Wd - 175)}" y="${sz(kz) + (sx(kx) + 26 > Wd - 175 ? 22 : 4)}" font-size="12" fill="var(--ink)">α ${nf(L.th2, 1)}° · θ₃ ${nf(L.th3, 1)}°</text>`;
+    sv += `<text x="${Math.min(sx(L.D) + 8, Wd - 150)}" y="${sz(L.zf) - 8}" font-size="12" fill="var(--ink)">D ${nf(L.D, 1)} · d ${nf(L.d, 1)} mm</text>`;
+    sv += `<text x="8" y="${Hd - 8}" font-size="11" fill="var(--muted)">plan de la patte ${M.LEG_NAMES[l]} · portée ${nf(Math.abs(L.L2 - L.L3) + S.rp.margins.reach_margin, 0)} ≤ d ≤ ${nf(L.L2 + L.L3 - S.rp.margins.reach_margin, 0)}</text>`;
+    sv += `</svg>`;
+  }
+  document.getElementById("sideview").innerHTML = sv;
+  // ---------- infos
+  const st = r.detail[pi][j];
+  const flags = M.WHY.filter((_, b) => r.why[pi][s] & (1 << b));
+  document.getElementById("stateinfo").innerHTML =
+    `<div>état <b>${esc(st.label)}</b></div><div>position du corps <b>${nf(v.sway[0], 0)} ; ${nf(v.sway[1], 0)} mm</b>${ph.ok ? "" : " (phase non faisable : position montrée = meilleur NESM géométriquement possible)"}</div>
+     <div>SSM pire cas <b>${nf(v.ssm, 1)} mm</b></div><div>z_G max <b>${nf(v.zmax, 1)} mm</b></div>
+     <div>demi-boîte CdG <b>${nf(v.hxy[0], 1)} × ${nf(v.hxy[1], 1)} mm</b></div><div>NESM de la phase <b>${nf(r.nesm[pi][s], 2)} mm</b></div>
+     <div>SSM corrigée de la phase <b>${nf(r.ssmc[pi][s], 1)} mm</b></div><div>contraintes géométriques <b>${flags.length ? esc(flags.join(", ")) : "respectées"}</b></div>`;
+}
+
+// ------------------------------------------------------------ balayage
+const SWEEP = [
+  ["x.L2", "L₂ fémur (mm)", 30, 140], ["x.L3", "L₃ tibia (mm)", 60, 200], ["x.alpha", "α repos (°)", 0, 70], ["x.beta", "β repos (°)", 30, 100], ["x.xi", "ξ repos (°)", 0, 90],
+  ["p.leg.L1", "L₁ coxa (mm)", 10, 80], ["p.body.battery.x", "x de la batterie (mm) — en S2 : batterie fixée là", -100, 60], ["p.body.chassis.m", "masse du châssis (kg)", 0.6, 2.2],
+  ["p.body.eps_cdg_xy", "incertitude CdG x, y (mm, S2)", 0, 25], ["p.task.stroke", "course du pied (mm)", 10, 80], ["p.task.sway_max", "balancement max (mm)", 20, 100],
+  ["p.margins.s_min", "s_min (mm)", 0, 20], ["p.chassis.N_ch", "longueur châssis (mm)", 150, 300], ["p.chassis.M_ch", "largeur châssis (mm)", 150, 300], ["p.body.arm_model.mount_from_front", "retrait de l'épaule du bras (mm)", 0, 120],
+];
+function buildSweep() {
+  const sel = document.getElementById("sw-param");
+  sel.innerHTML = SWEEP.map((q, i) => `<option value="${i}">${esc(q[1])}</option>`).join("");
+  const setRange = () => { const q = SWEEP[+sel.value]; document.getElementById("sw-min").value = q[2]; document.getElementById("sw-max").value = q[3]; };
+  sel.addEventListener("change", setRange); setRange();
+  document.getElementById("sw-run").addEventListener("click", runSweep);
+}
+function runSweep() {
+  const q = SWEEP[+document.getElementById("sw-param").value];
+  const a = parseFloat(document.getElementById("sw-min").value), b = parseFloat(document.getElementById("sw-max").value);
+  const n = Math.max(3, Math.min(81, Math.round(+document.getElementById("sw-n").value || 21)));
+  const values = Array.from({ length: n }, (_, i) => a + ((b - a) * i) / (n - 1));
+  const bar = document.getElementById("sw-prog"); bar.style.width = "0";
+  document.getElementById("sw-note").textContent = `Calcul de ${n} designs…`;
+  const cur = getPath(q[0]);
+  call({ cmd: "sweep", p: clone(S.p), x: Object.assign({}, S.x), sc: S.sc, opts: opts(), path: q[0], values }, (m) => {
+    if (m.progress !== undefined) { bar.style.width = `${100 * m.progress}%`; return; }
+    if (m.error) { document.getElementById("sw-note").textContent = "Erreur : " + m.error; return; }
+    bar.style.width = "100%"; drawSweep(m.res, q, cur);
+  });
+}
+function drawSweep(res, q, cur) {
+  const W = 720, H = 380, ml = 58, mr = 30, mt = 22, mb = 46, ph = (H - mt - mb - 20) / 2;
+  const xs = res.map((d) => d.v), x0 = Math.min(...xs), x1 = Math.max(...xs);
+  const X = (v) => ml + ((v - x0) / ((x1 - x0) || 1)) * (W - ml - mr);
+  const panel = (key, top, label, color) => {
+    const vals = res.map((d) => d[key]).filter((v) => isFinite(v));
+    if (!vals.length) return `<text x="${ml}" y="${top + ph / 2}" font-size="12" fill="var(--muted)">${esc(label)} : aucune valeur (aucune phase faisable)</text>`;
+    let y0 = Math.min(0, ...vals), y1 = Math.max(...vals); if (y1 - y0 < 1e-9) y1 = y0 + 1; y1 += (y1 - y0) * 0.08;
+    const Y = (v) => top + ph - ((v - y0) / (y1 - y0)) * ph;
+    let s = `<line x1="${ml}" y1="${top + ph}" x2="${W - mr}" y2="${top + ph}" stroke="var(--rule)"/>`;
+    for (let k = 0; k <= 4; k++) { const v = y0 + ((y1 - y0) * k) / 4; s += `<line x1="${ml}" y1="${Y(v)}" x2="${W - mr}" y2="${Y(v)}" stroke="var(--rule)" stroke-width=".6"/><text x="${ml - 6}" y="${Y(v) + 4}" font-size="10" text-anchor="end" fill="var(--muted)">${nf(v, Math.abs(y1 - y0) < 5 ? 2 : 1)}</text>`; }
+    s += `<text x="${ml}" y="${top - 4}" font-size="11.5" fill="var(--ink)">${esc(label)}</text>`;
+    let path = "", pen = false;
+    res.forEach((d) => { if (isFinite(d[key])) { path += `${pen ? "L" : "M"}${X(d.v)},${Y(d[key])} `; pen = true; } else pen = false; });
+    s += `<path d="${path}" fill="none" stroke="${color}" stroke-width="2"/>`;
+    res.forEach((d) => { if (isFinite(d[key])) s += `<circle cx="${X(d.v)}" cy="${Y(d[key])}" r="3.2" fill="${d.adm ? color : "var(--panel)"}" stroke="${color}" stroke-width="1.5"><title>${q[1]} = ${nf(d.v, 2)} : ${nf(d[key], 2)}${d.adm ? " (admissible)" : " (non admissible)"}</title></circle>`; });
+    return s;
+  };
+  let s = `<div class="tw"><svg viewBox="0 0 ${W} ${H}" style="min-width:520px" role="img" aria-label="Impact de ${esc(q[1])}">`;
+  s += panel("f2", mt + 12, "NESM minimal sur les 14 phases (mm) — à maximiser", "var(--accent)");
+  s += panel("f3", mt + 12 + ph + 30, "couple requis en C2 (N·m) — à minimiser", "var(--plot)");
+  if (isFinite(cur) && cur >= x0 && cur <= x1) s += `<line x1="${X(cur)}" y1="${mt}" x2="${X(cur)}" y2="${H - mb}" stroke="var(--warn)" stroke-dasharray="4 3"/><text x="${X(cur) + 4}" y="${H - mb - 4}" font-size="10" fill="var(--warn)">réglage actuel</text>`;
+  for (let k = 0; k <= 5; k++) { const v = x0 + ((x1 - x0) * k) / 5; s += `<text x="${X(v)}" y="${H - mb + 16}" font-size="10" text-anchor="middle" fill="var(--muted)">${nf(v, Math.abs(x1 - x0) < 5 ? 2 : 0)}</text>`; }
+  s += `<text x="${(ml + W - mr) / 2}" y="${H - 8}" font-size="11.5" text-anchor="middle" fill="var(--ink)">${esc(q[1])}</text></svg></div>`;
+  document.getElementById("sw-chart").innerHTML = s;
+  const nAdm = res.filter((d) => d.adm).length;
+  document.getElementById("sw-note").textContent = `${nAdm} design(s) admissible(s) sur ${res.length} (points pleins). Les autres réglages restent ceux de la page ; les servos sont ceux choisis. Point creux = non admissible (une contrainte est violée), mais les phases faisables donnent quand même une valeur.`;
+}
+
+// ------------------------------------------------------------- methode
+function renderMethod() {
+  const v = VALID;
+  document.getElementById("method").innerHTML = `
+  <p><b>Validation du portage.</b> Ce simulateur reprend ligne à ligne le programme Python <code>gr2/</code>. Sur ${v.cas} designs (2 montages × 2 scénarios), ${v.valeurs_comparees.toLocaleString("fr-FR")} valeurs (NESM, SSM corrigée, coefficients de couple par phase et position du corps) ont été comparées : écart relatif maximal ${v.ecart_relatif_max.nesm.toExponential(0)}. Admissibilité identique pour les ${v.combinaisons} combinaisons de servos testées (${v.admissibilite_differente} différence). Le mode « exact » a aussi été comparé au programme avec un catalogue d'un seul servo (écart 4·10⁻¹⁴).</p>
+  <p><b>Validation de l'optimiseur (carte « Optimisation complète »).</b> La carte exécute le même pipeline que <code>gr2/pipeline.py</code> : Sobol → pré-filtre → évaluation exacte de chaque combinaison de servos → raffinement local → Pareto 3D → couches de non-dominance → Monte-Carlo → front robuste → choix (coude, ε-contrainte). Port JS comparé au Python : ${VALID_OPT.lignes_comparees} lignes de résultats, écart relatif max ${VALID_OPT.ecart_relatif_max.toExponential(0)} ; Pareto, couches, coude et choix ε-contrainte identiques sur 2 cas. Bout en bout, sur le même échantillon de points (sans raffinement ni Monte-Carlo) : ${VALID_PIPE ? VALID_PIPE.filter(c=>c.front_identique&&c.stats_identiques).length + " / " + VALID_PIPE.length + " cas identiques (front, statistiques, choix)" : "non disponible"}. Les tirages de Sobol (embrouillage), du raffinement et du Monte-Carlo utilisent un générateur différent d'un moteur à l'autre : deux exécutions complètes JS et Python ne donnent donc pas exactement les mêmes points, seulement des fronts voisins. Le moteur Python (<code>python serve.py</code>) est celui de référence ; la pré-sélection des servos est indicative.</p>
+  <p><b>Audit de cohérence simulateur ↔ optimiseur.</b> ${VALID_AUDIT ? `${VALID_AUDIT.designs} designs (points des fronts, admissibles, tirages aléatoires dans et hors des bornes, perturbations d'une variable à la fois autour de l'optimum) × 27 combinaisons de servos = ${VALID_AUDIT.tot.pairs.toLocaleString("fr-FR")} cas rejoués dans les deux programmes : ${VALID_AUDIT.tot.pre_diff} désaccord sur le pré-filtre, ${VALID_AUDIT.tot.adm_diff} désaccord d'admissibilité, écart relatif maximal sur f₁, f₂, f₃ ${VALID_AUDIT.err_obj.toExponential(0)}, ${VALID_AUDIT.tot.dom_diff} désaccord sur la dominance par rapport au front. ${VALID_AUDIT.ties_cases} cas sur ${VALID_AUDIT.tot.both_adm.toLocaleString("fr-FR")} diffèrent sur des grandeurs lues à la position du corps retenue (couple de C₁ ou C₃, course de C₃) : ex æquo de position, la valeur de l'autre programme est atteinte par une autre position équivalente (${VALID_AUDIT.ties_explained} expliqués sur ${VALID_AUDIT.ties_cases}).` : "non disponible"}</p>
+  <p><b>Ce qui est calculé, pour chaque phase et chaque position du corps sur la grille :</b></p>
+  <ul>
+    <li><b>Cinématique</b> : D = L₂ cos α + L₃ cos β ; H₂ = L₃ sin β − L₂ sin α ; inverse genou haut ; portée |L₂ − L₃| + m ≤ d ≤ L₂ + L₃ − m ; θ₃ = α + β dans [θ₃min, θ₃max].</li>
+    <li><b>CdG</b> : moyenne pondérée du châssis, de la batterie, du bras (3 masses) et de chaque pièce de patte, recalculée à chaque pose. S2 : boîte des CdG possibles (postures du bras × coins de la zone batterie) + ε_CdG. Mode « comme l'optimiseur » : pattes au servo de référence + borne ε_legs.</li>
+    <li><b>Réactions</b> : 3 pieds : Rᵢ = M g λᵢ (barycentriques), pire point de la boîte exact ; 4 pieds : maximum exact sur toutes les répartitions (atteint sur une solution à 3 pieds).</li>
+    <li><b>Couples</b> : τ₂ = R·D ; τ₃ = R·L₃|cos β| ; τ₁ = R·(a/g)·r ; patte en l'air : poids des segments × bras de levier. Limite : frac × C_blocage / SF.</li>
+    <li><b>Stabilité</b> : SSM (McGhee &amp; Frank) au pire coin de la boîte ; NESM = √(d² + z²) − z (Hirose 2012), en 3D pieds sur l'obstacle ; SSM corrigée = SSM − z_G·a/g − ε_pied (décalage du ZMP, modèle chariot-table de Kajita 2003).</li>
+    <li><b>Phases</b> : crawl discontinu (le corps ne bouge que 4 pieds au sol), marche avant et arrière, pattes avant sur l'obstacle, rotation sur place ±lacet/2, saisie bras tendu. Pour chaque phase, on garde la position du corps admissible qui maximise le NESM.</li>
+  </ul>
+  <p><b>Limites</b> (identiques au programme) : statique (pas d'inertie des pattes ni de chocs) ; servos modélisés par leur couple de blocage × frac ; efforts internes à 4 pieds non modélisés ; corps horizontal sur l'obstacle ; grille de balancement finie (augmentez n pour vérifier la convergence) ; segments rigides.</p>
+  <p class="note">Sources : Hirose, Lazarenko, Endo 2012 (NESM) ; Kajita et al. 2003 (ZMP, chariot-table) ; Vukobratović &amp; Borovac 2004 (ZMP) ; e-manual Robotis AX-12A (charge ≤ 1/5 du couple de blocage) ; Gonzalez de Santos 1998 (allures discontinues) ; catalogue de motorisation FabLab EMINES 2026-27.</p>`;
+}
+
+
+// ------------------------------------------------ contraintes et comparaison a l'optimum
+const CMP = { ref: "saved" };
+function cmpBounds() { const b = (S.p.search && S.p.search.bounds) || { L2: [40, 140], L3: [60, 200], alpha: [2, 70], beta: [30, 130], xi: [0, 90] }; const K = ["L2", "L3", "alpha", "beta", "xi"]; return { lo: K.map((k) => b[k][0]), hi: K.map((k) => b[k][1]) }; }
+function cmpRef() {
+  const key = S.p.chassis.mount + "_" + S.sc;
+  if (CMP.ref === "last") {
+    const o = OPT.resOpts, R = OPT.res;
+    if (!R) return { err: "aucune optimisation lancée dans la carte « Optimisation complète »" };
+    if (o.mount !== S.p.chassis.mount || o.sc !== S.sc) return { err: `la dernière optimisation concerne ${o.mount} / ${o.sc}, pas ${S.p.chassis.mount} / ${S.sc}` };
+    return { ref: { front: R.front || [], rob: R.rob_front || [], choix: R.res.choix || {} }, label: "dernière optimisation de la carte", params: null, sway: o.sway_n };
+  }
+  const q = REF_FRONTS[key]; if (!q) return { err: "pas de référence pour ce montage / scénario" };
+  return { ref: q, label: "résultats sauvegardés (" + key.replace("_", ", ") + ")", params: DEFAULT_P, sway: DEFAULT_P.task.sway_n };
+}
+function pct(v) { return isFinite(v) ? (v >= 0 ? "+" : "−") + nf(Math.abs(100 * v), 0) + " %" : "—"; }
+function renderCompare(r) {
+  const s = r.servo, ob = Gr2Cmp.objectives(r, S.rp || S.p), cons = Gr2Cmp.constraints(M, S.rp || S.p, r);
+  const hard = cons.filter((c) => c.hard), bad = hard.filter((c) => !c.ok && !c.undef), soft = cons.filter((c) => !c.hard && !c.ok);
+  const ref = cmpRef(); let warn = [];
+  if (ref.err) warn.push(ref.err);
+  else if (ref.params) {
+    const d = Gr2Cmp.diffParams(S.rp || S.p, ref.params, ["search", "robust", "servos"]);
+    if (d.length) warn.push(`la configuration a été modifiée par rapport à celle des résultats sauvegardés (${d.slice(0, 6).map((q) => `${q[0]} : ${JSON.stringify(q[1])} → ${JSON.stringify(q[2])}`).join(" ; ")}${d.length > 6 ? " ; …" : ""}). La comparaison n'est plus à périmètre égal : relancez l'optimisation (carte ci-dessous) puis choisissez « Dernière optimisation ».`);
+  }
+  if (!ref.err && ref.sway && (S.rp || S.p).task.sway_n !== ref.sway) warn.push(`grille de balancement ${(S.rp || S.p).task.sway_n}×${(S.rp || S.p).task.sway_n} ici, ${ref.sway}×${ref.sway} dans la référence : une grille plus fine augmente un peu f₂.`);
+  $("cmp-warn").innerHTML = warn.map((w) => `<p class="note" style="color:var(--warn)">⚠ ${w}</p>`).join("");
+  // objectifs
+  const f = [ob.f1, ob.f2, ob.f3];
+  let h = `<div class="kpis" style="margin-bottom:10px">` + kpi("f₁ masse des 4 pattes (kg) — à minimiser", nf(ob.f1, 3)) +
+    kpi(`f₂ NESM garanti (mm) — à maximiser${ob.admissible ? "" : ob.nOk ? ` · sur les ${ob.nOk} phases réalisables : ${nf(ob.f2partial, 2)}` : " · aucune phase réalisable"}`, isFinite(ob.f2) ? nf(ob.f2, 2) : "indéfini", ob.admissible ? "" : "bad") +
+    kpi("f₃ couple C₂ requis (N·m) — à minimiser", isFinite(ob.f3) ? nf(ob.f3, 2) : "∞ (aucune position)", isFinite(ob.f3) ? "" : "bad") +
+    kpi("contraintes dures violées", `${bad.length} / ${hard.length}`, bad.length ? "bad" : "ok") + `</div>`;
+  if (!ob.admissible) h += `<p class="note"><span class="pill bad">hors domaine admissible</span> Les objectifs f₂ et f₃ ne sont définis (au sens de l'optimiseur) que si les ${ob.nPh} phases sont réalisables ; les valeurs partielles ci-dessus sont indicatives. ${isFinite(ob.f2_notq) ? `Si l'on <b>ignore les limites de couple</b> des servos (géométrie et stabilité imposées) : f₂ = <b>${nf(ob.f2_notq, 2)} mm</b> et le couple C₂ requis serait <b>${nf(ob.f3_notq, 2)} N·m</b> — il faut un servo C₂ utilisable à ce niveau.` : "Même sans les limites de couple, la géométrie ou la stabilité échoue dans au moins une phase : ce n'est pas un problème de servo."} Le tableau des contraintes dit ce qui casse et de combien.</p>`;
+  $("cmp-obj").innerHTML = h;
+  // comparaison a l'optimum
+  let hr = "";
+  if (!ref.err) {
+    const cmp = Gr2Cmp.compare(ref.ref, f, S.x, cmpBounds());
+    if (cmp) {
+      const ld = (row, lab) => `<button class="btn" data-ld="${esc(JSON.stringify({ L2: row.L2, L3: row.L3, alpha: row.alpha, beta: row.beta, xi: row.xi, servo_C1: row.servo_C1, servo_C2: row.servo_C2, servo_C3: row.servo_C3 }))}">${lab}</button>`;
+      hr += `<p style="margin:6px 0"><b>Référence : ${esc(ref.label)}</b> — front de Pareto 3D de ${cmp.n_ref} designs. Idéal du front : f₁ ${nf(cmp.ideal[0], 3)} kg, f₂ ${nf(cmp.ideal[1], 2)} mm, f₃ ${nf(cmp.ideal[2], 2)} N·m (aucun design ne réalise les trois à la fois).</p>`;
+      if (cmp.valid) hr += `<p style="margin:6px 0">${ob.admissible ? "" : `<span class="pill bad">hors domaine admissible</span> valeurs indicatives (au moins une contrainte dure est violée) : `}${cmp.dominators === 0 ? `<span class="pill ok">non dominé</span> aucun design du front n'est meilleur sur les trois objectifs à la fois.` : `<span class="pill warn">dominé par ${cmp.dominators} design(s)</span> du front (au moins aussi bon partout, strictement meilleur quelque part) : le plus proche est ${cmp.dominated_by.map((q) => `L₂ ${nf(q.row.L2, 1)}, L₃ ${nf(q.row.L3, 1)}, ${q.row.servo_C1}/${q.row.servo_C2}/${q.row.servo_C3} (f₁ ${nf(q.f[0], 3)}, f₂ ${nf(q.f[1], 2)}, f₃ ${nf(q.f[2], 2)})`)[0]}.`} Distance normalisée à l'idéal (0 = idéal ; coude de référence : ${nf((cmp.named.find((n) => n.key === "coude") || cmp.named[0]).regret, 2)}) : <b>${nf(cmp.regret, 2)}</b>.</p>`;
+      else hr += `<p style="margin:6px 0">Design non admissible : pas de comparaison des objectifs. Le point du front le plus proche (dans l'espace des variables) ${cmp.nearest ? `est L₂ ${nf(cmp.nearest.row.L2, 1)}, L₃ ${nf(cmp.nearest.row.L3, 1)}, α ${nf(cmp.nearest.row.alpha, 1)}, β ${nf(cmp.nearest.row.beta, 1)}, ξ ${nf(cmp.nearest.row.xi, 1)} (${cmp.nearest.row.servo_C1}/${cmp.nearest.row.servo_C2}/${cmp.nearest.row.servo_C3}).` : ""}</p>`;
+      hr += `<div class="tw"><table><thead><tr><th>point de référence</th><th>f₁ kg</th><th>f₂ mm</th><th>f₃ N·m</th><th>Δf₁</th><th>Δf₂</th><th>Δf₃</th><th>rapport</th><th></th></tr></thead><tbody>`;
+      hr += `<tr class="sel"><td>votre design</td><td>${nf(f[0], 3)}</td><td>${nf(f[1], 2)}</td><td>${nf(f[2], 2)}</td><td></td><td></td><td></td><td>${ob.admissible ? "" : "non admissible"}</td><td></td></tr>`;
+      for (const n of cmp.named) hr += `<tr style="cursor:default"><td>${esc(n.label)}<br><span class="note">L₂ ${nf(n.row.L2, 1)} · L₃ ${nf(n.row.L3, 1)} · ${esc(n.row.servo_C1)}/${esc(n.row.servo_C2)}/${esc(n.row.servo_C3)}</span></td><td>${nf(n.f[0], 3)}</td><td>${nf(n.f[1], 2)}</td><td>${nf(n.f[2], 2)}</td>
+        <td>${cmp.valid ? nf(n.d[0], 3) + " (" + pct(n.rel[0]) + ")" : "—"}</td><td>${cmp.valid ? nf(n.d[1], 2) + " (" + pct(n.rel[1]) + ")" : "—"}</td><td>${cmp.valid ? nf(n.d[2], 2) + " (" + pct(n.rel[2]) + ")" : "—"}</td><td>${esc(n.rapport)}</td><td>${ld(n.row, "Charger")}</td></tr>`;
+      hr += `</tbody></table></div><p class="note">Δ = votre design − référence. Δf₁ et Δf₃ négatifs, Δf₂ positif = mieux que la référence sur cet objectif. Le front contient aussi des designs non robustes au Monte-Carlo ; les trois choix nommés viennent du front robuste.</p>`;
+      if (cmp.nearest) hr += `<div class="toolbar" style="margin-top:6px">${ld(cmp.nearest.row, "Charger le point du front le plus proche (variables)")}</div>`;
+    }
+  }
+  $("cmp-ref").innerHTML = hr;
+  document.querySelectorAll("#cmp-ref [data-ld]").forEach((b) => b.addEventListener("click", () => { const q = JSON.parse(b.dataset.ld); loadDesign(q, { mount: S.p.chassis.mount, sc: S.sc, sway_n: (S.rp || S.p).task.sway_n }); }));
+  // contraintes
+  const fv = (c) => Number.isNaN(c.val) ? "indéfini" : !isFinite(c.val) ? "∞" : typeof c.val === "number" ? nf(c.val, c.id === "PH" ? 0 : c.unit === "" ? 2 : c.unit === "kg" ? 2 : c.unit === "N·m" ? 2 : 1) : String(c.val);
+  const fl = (c) => typeof c.lim === "number" ? nf(c.lim, c.id === "PH" ? 0 : c.unit === "" ? 2 : c.unit === "kg" || c.unit === "N·m" ? 2 : 1) : c.lim;
+  const sym = { "<=": "≤", ">=": "≥", in: "∈" };
+  let t = `<table><thead><tr><th>contrainte</th><th>valeur</th><th></th><th>limite</th><th>marge</th><th>état</th></tr></thead><tbody>`;
+  for (const c of cons) {
+    const st = c.ok && !c.undef ? `<td class="ok">respectée</td>` : c.undef && c.free ? `<td class="note">suffisant (requis ≤ limite) : le défaut est ailleurs</td>` : c.undef ? `<td class="note">non évaluable (aucune position admissible : voir PH)</td>` : c.hard ? `<td class="bad">VIOLÉE</td>` : `<td style="color:var(--warn)">non atteinte (souple)</td>`;
+    t += `<tr style="cursor:default" title="${esc(c.why || "")}"><td>${esc(c.id)} · ${esc(c.label)}</td><td>${fv(c)} ${c.unit}</td><td>${sym[c.sense]}</td><td>${fl(c)} ${c.unit}</td><td>${isFinite(c.margin) ? (c.margin >= 0 ? "+" : "−") + nf(Math.abs(c.margin), c.id === "PH" ? 0 : c.unit === "" ? 2 : c.unit === "kg" || c.unit === "N·m" ? 2 : 1) + " " + c.unit : "—"}</td>${st}</tr>`;
+  }
+  t += `</tbody></table><p class="note">Survolez une ligne pour sa signification. « Marge » : de combien la variable peut encore se dégrader avant de violer la contrainte (positive) ou de combien il manque (négative). Couples : valeur = couple minimal requis sur toutes les positions admissibles, au pire de toutes les phases.</p>`;
+  $("cmp-con").innerHTML = t;
+  $("ref-last").disabled = !OPT.res;
+}
+
+// ------------------------------------------------ optimisation complete
+const OPT = { engine: "js", base: null, stop: false, running: false, res: null, pool: null, jobId: null };
+const OPT_DEF = { js: { n: 1024, rounds: 1, pp: 8, mc: 30, sway: 7, seed: 1 }, py: { n: 8192, rounds: 2, pp: 24, mc: 100, sway: 11, seed: 1 } };
+const KEYS_CH = [["coude", "Compromis (coude)"], ["eps_contrainte", "C₂ minimal, NESM ≥ cible (ε-contrainte)"], ["couple_min", "Plus petit C₂ du front"], ["meilleur_non_robuste", "Meilleur non robuste"]];
+function optDefaults(e) {
+  const d = OPT_DEF[e];
+  $("o-nsobol").value = d.n; $("o-rounds").value = d.rounds; $("o-pp").value = d.pp; $("o-nmc").value = d.mc; $("o-sway").value = d.sway; $("o-seed").value = d.seed;
+}
+function $(id) { return document.getElementById(id); }
+function buildOpt() {
+  optDefaults("js"); buildOptBounds(); buildOptAllowed();
+  document.querySelectorAll("#seg-eng button").forEach((b) => b.addEventListener("click", () => {
+    if (b.disabled || OPT.running) return; OPT.engine = b.dataset.v; setSeg("seg-eng", OPT.engine); optDefaults(OPT.engine);
+  }));
+  $("o-run").addEventListener("click", runOpt); $("o-stop").addEventListener("click", stopOpt); $("o-screen").addEventListener("click", screenOpt);
+  pingBackend();
+}
+function buildOptBounds() {
+  const b = (S.p.search && S.p.search.bounds) || { L2: [40, 140], L3: [60, 200], alpha: [2, 70], beta: [30, 130], xi: [0, 90] };
+  if (!S.p.search) S.p.search = { n_sobol: 8192, seed: 1, bounds: b, refine_rounds: 2, refine_per_point: 24 };
+  if (!S.p.robust) S.p.robust = { n_mc: 100, rel_mass: 0.1, rel_torque: 0.1, abs_len: 2, abs_ang: 2, abs_cdg: 10, pass_rate: 0.95 };
+  const lab = { L2: "L₂ (mm)", L3: "L₃ (mm)", alpha: "α (°)", beta: "β (°)", xi: "ξ (°)" };
+  $("o-bounds").innerHTML = Object.keys(lab).map((k) => `<label>${lab[k]}<span style="display:flex;gap:4px"><input class="num-in" type="number" data-bk="${k}" data-i="0" value="${b[k][0]}"><input class="num-in" type="number" data-bk="${k}" data-i="1" value="${b[k][1]}"></span></label>`).join("");
+  $("o-bounds").querySelectorAll("input").forEach((el) => el.addEventListener("change", () => { S.p.search.bounds[el.dataset.bk][+el.dataset.i] = parseFloat(el.value); }));
+}
+function defaultAllowed() {
+  const names = S.p.servos.map((s) => s.name), ok = (s) => s.stock === null || s.stock === undefined || s.stock >= 4;
+  const pick = (L) => L.filter((n) => names.includes(n) && ok(S.p.servos[names.indexOf(n)]));
+  const a = [pick(["SG90", "S-U400", "S3306"]), pick(["S3306"]), pick(["S-U400", "S3306"])];
+  return a.map((l) => l.length ? l : S.p.servos.filter(ok).map((s) => s.name));
+}
+function buildOptAllowed(allowed) {
+  const al = allowed || (OPT.allowed = OPT.allowed || defaultAllowed());
+  OPT.allowed = al;
+  $("o-allowed").innerHTML = ["C1 (lacet)", "C2 (épaule)", "C3 (genou)"].map((t, j) =>
+    `<div class="rowlab" style="color:var(--muted)">${t}</div><div class="chips">${S.p.servos.map((s) => {
+      const bad = !(s.stock === null || s.stock === undefined || s.stock >= 4);
+      return `<label><input type="checkbox" data-aj="${j}" value="${esc(s.name)}" ${al[j].includes(s.name) ? "checked" : ""} ${bad ? "disabled" : ""}>${esc(s.name)}${bad ? " (stock " + s.stock + ")" : ""}</label>`;
+    }).join("")}</div>`).join("");
+  $("o-allowed").querySelectorAll("input").forEach((el) => el.addEventListener("change", () => { OPT.allowed = readAllowed(); updCombos(); }));
+  updCombos();
+}
+function readAllowed() { return [0, 1, 2].map((j) => [...document.querySelectorAll(`#o-allowed input[data-aj="${j}"]:checked`)].map((e) => e.value)); }
+function nCombos() { const a = readAllowed(); return a[0].length * a[1].length * a[2].length; }
+function updCombos() { const a = readAllowed(), n = nCombos(); $("o-combos").textContent = `${a.map((l) => l.length).join(" × ")} = ${n} combinaison(s) avant filtre de stock`; }
+async function pingBackend() {
+  for (const base of ["", "http://localhost:8765"]) {
+    try {
+      const r = await fetch(base + "/api/ping", { cache: "no-store" }); if (!r.ok) continue; const j = await r.json();
+      if (j.ok) { OPT.base = base; $("eng-py").disabled = false; $("eng-msg").textContent = `serveur Python détecté (${j.cores} cœurs)`; return; }
+    } catch (e) { /* pas de serveur */ }
+  }
+  $("eng-msg").textContent = "pas de serveur Python (lancer python serve.py pour le moteur complet)";
+}
+// ---- executeur parallele (pool de workers)
+function poolSource() {
+  return document.getElementById("gr2-model").textContent + document.getElementById("gr2-opt").textContent +
+    `\nself.onmessage=(e)=>{const m=e.data;try{self.postMessage({id:m.id,rows:Gr2Opt.evalBatch(m.items,m.p,m.sc)});}catch(err){self.postMessage({id:m.id,error:String(err&&err.stack||err)});}};`;
+}
+function makePool() {
+  const n = Math.max(1, Math.min(8, (navigator.hardwareConcurrency || 2) - 1));
+  let ws = null, url = null;
+  try { url = URL.createObjectURL(new Blob([poolSource()], { type: "text/javascript" })); ws = Array.from({ length: n }, () => new Worker(url)); } catch (e) { ws = null; }
+  let id = 0; const waiting = new Map();
+  if (ws) ws.forEach((w) => { w.onmessage = (e) => { const cb = waiting.get(e.data.id); if (cb) cb(e.data); }; w.onerror = (e) => { console.error(e); }; });
+  return {
+    n: ws ? n : 1,
+    async exec(items, p, sc) {
+      if (!ws) {   // repli : fil principal, par petits paquets pour garder l'interface vivante
+        const out = [];
+        for (let i = 0; i < items.length && !OPT.stop; i += 4) { out.push(...Gr2Opt.evalBatch(items.slice(i, i + 4), p, sc)); await new Promise((r) => setTimeout(r)); }
+        while (out.length < items.length) out.push(null);
+        return out;
+      }
+      const chunk = Math.max(1, Math.min(12, Math.ceil(items.length / (ws.length * 3))));
+      const jobs = []; for (let i = 0; i < items.length; i += chunk) jobs.push([i, items.slice(i, i + chunk)]);
+      const out = new Array(items.length).fill(null); let next = 0;
+      await Promise.all(ws.map(async (w) => {
+        while (next < jobs.length && !OPT.stop) {
+          const [i, its] = jobs[next++], my = ++id;
+          const r = await new Promise((res) => { waiting.set(my, res); w.postMessage({ id: my, p, sc, items: its }); }); waiting.delete(my);
+          if (r.error) throw new Error(r.error); r.rows.forEach((row, k) => { out[i + k] = row; });
+        }
+      }));
+      return out;
+    },
+    close() { if (ws) ws.forEach((w) => w.terminate()); if (url) URL.revokeObjectURL(url); },
+  };
+}
+function optConfig() {
+  const cfg = clone(S.p);
+  cfg.search.n_sobol = Math.round(+$("o-nsobol").value); cfg.search.seed = Math.round(+$("o-seed").value) || 1;
+  return cfg;
+}
+function optOptions() {
+  return { mount: S.p.chassis.mount, sc: S.sc, allowed: readAllowed(), nSobol: Math.max(8, Math.round(+$("o-nsobol").value)), refineRounds: Math.max(0, Math.round(+$("o-rounds").value)),
+    perPoint: Math.max(1, Math.round(+$("o-pp").value)), nMc: Math.max(0, Math.round(+$("o-nmc").value)), sway_n: Math.max(3, Math.round(+$("o-sway").value)), seed: Math.round(+$("o-seed").value) || 1 };
+}
+function optBusy(b, msg) {
+  OPT.running = b; $("o-run").disabled = b; $("o-screen").disabled = b; $("o-stop").disabled = !b;
+  document.querySelectorAll("#seg-eng button").forEach((x) => { if (x.id !== "eng-py" || OPT.base !== null) x.disabled = b; });
+  $("o-state").textContent = msg || "";
+}
+function setProg(f, msg) { $("o-prog").style.width = `${Math.round(100 * f)}%`; if (msg) $("o-log").textContent = msg + "\n" + $("o-log").textContent.split("\n").slice(0, 7).join("\n"); }
+async function pyJob(body, label) {
+  const r = await fetch(OPT.base + "/api/job", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }); const { id } = await r.json(); OPT.jobId = id;
+  for (;;) {
+    await new Promise((q) => setTimeout(q, 1500));
+    const j = await (await fetch(OPT.base + "/api/job/" + id, { cache: "no-store" })).json();
+    setProg(j.progress || 0); $("o-state").textContent = `${label} ${j.elapsed ?? 0} s`;
+    if (j.log && j.log.length) $("o-log").textContent = j.log.slice(-6).reverse().join("\n");
+    if (j.status === "error") throw new Error(j.error);
+    if (j.status === "done" || j.status === "stopped") return j.result;
+  }
+}
+async function runOpt() {
+  if (OPT.running) return;
+  const o = optOptions(); if (nCombos() === 0) { $("o-state").textContent = "choisissez au moins un servo par articulation"; return; }
+  OPT.stop = false; optBusy(true, "démarrage…"); setProg(0); $("o-log").textContent = ""; $("o-out").innerHTML = "";
+  const t0 = Date.now(); let res = null;
+  try {
+    if (OPT.engine === "py") {
+      const p = clone(S.p); p.task.sway_n = o.sway_n;
+      res = await pyJob({ kind: "optimize", p, mount: o.mount, sc: o.sc, allowed: o.allowed, n_sobol: o.nSobol, refine_rounds: o.refineRounds, refine_per_point: o.perPoint, n_mc: o.nMc, seed: o.seed }, "Python en cours…");
+    } else {
+      const pool = makePool(); OPT.pool = pool;
+      const tick = setInterval(() => { $("o-state").textContent = `JS (${pool.n} worker${pool.n > 1 ? "s" : ""}) ${Math.round((Date.now() - t0) / 1000)} s`; }, 500);
+      try { res = await Gr2Opt.optimize(optConfig(), o, pool.exec, { stop: () => OPT.stop, progress: setProg, log: () => {} }); } finally { clearInterval(tick); pool.close(); }
+    }
+    OPT.res = res; OPT.resOpts = o; $("ref-last").disabled = false; renderOpt(res, o, Date.now() - t0);
+    optBusy(false, OPT.stop ? "arrêté (résultats partiels)" : "terminé");
+  } catch (err) { console.error(err); optBusy(false, "erreur : " + (err.message || err)); }
+}
+function stopOpt() { OPT.stop = true; $("o-state").textContent = "arrêt demandé…"; if (OPT.engine === "py" && OPT.base !== null && OPT.jobId) fetch(OPT.base + "/api/job/" + OPT.jobId + "/stop", { method: "POST", body: "{}" }); }
+async function screenOpt() {
+  if (OPT.running) return; OPT.stop = false; optBusy(true, "pré-sélection…"); setProg(0.1);
+  try {
+    let r;
+    if (OPT.engine === "py") r = await pyJob({ kind: "screen", p: clone(S.p), mount: S.p.chassis.mount, sc: S.sc, n: 512 }, "pré-sélection Python…");
+    else { const pool = makePool(); try { r = await Gr2Opt.screenServos(optConfig(), S.sc, S.p.chassis.mount, pool.exec, 384); } finally { pool.close(); } }
+    if (!r.ok) { $("o-state").textContent = "aucun design admissible même avec un servo illimité : changez les entrées"; optBusy(false, $("o-state").textContent); return; }
+    buildOptAllowed(r.allowed); setProg(1);
+    $("o-log").textContent = `Couple requis minimal (borne inférieure, servo illimité de masse minimale) : C1 ${nf(r.minima[0], 2)}, C2 ${nf(r.minima[1], 2)}, C3 ${nf(r.minima[2], 2)} N·m. Servos retenus : C1 ${r.allowed[0].join(", ") || "aucun"} ; C2 ${r.allowed[1].join(", ") || "aucun"} ; C3 ${r.allowed[2].join(", ") || "aucun"}.`;
+    optBusy(false, "pré-sélection faite");
+  } catch (err) { console.error(err); optBusy(false, "erreur : " + (err.message || err)); }
+}
+function loadDesign(r, o) {
+  S.p.chassis.mount = o.mount; S.sc = o.sc; S.mode = "exact";
+  Object.assign(S.x, { L2: r.L2, L3: r.L3, alpha: r.alpha, beta: r.beta, xi: r.xi });
+  S.combo = [r.servo_C1, r.servo_C2, r.servo_C3].map(idx);
+  S.p.task.sway_n = Math.max(3, o.sway_n);
+  syncControls(); schedule(); window.scrollTo({ top: 0, behavior: "smooth" });
+}
+function optPlot(res) {
+  const W = 720, H = 380, ml = 54, mr = 16, mt = 14, mb = 44, pts = res.adm || [], fr = res.front || [], rf = res.rob_front || [];
+  const all = pts.concat(fr, rf); if (!all.length) return "";
+  const xs = all.map((r) => r.f2_nesm), ys = all.map((r) => r.f3_couple_C2);
+  let x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys); const px = (x1 - x0) * 0.04 || 1, py = (y1 - y0) * 0.06 || 0.1; x0 -= px; x1 += px; y0 -= py; y1 += py;
+  const X = (v) => ml + ((v - x0) / (x1 - x0)) * (W - ml - mr), Y = (v) => H - mb - ((v - y0) / (y1 - y0)) * (H - mt - mb);
+  let s = `<div class="tw"><svg viewBox="0 0 ${W} ${H}" style="min-width:520px" role="img" aria-label="Plan NESM, couple C2 des designs admissibles, du front de Pareto et du front robuste">`;
+  for (let k = 0; k <= 5; k++) { const vx = x0 + ((x1 - x0) * k) / 5, vy = y0 + ((y1 - y0) * k) / 5;
+    s += `<line x1="${X(vx)}" y1="${mt}" x2="${X(vx)}" y2="${H - mb}" stroke="var(--rule)" stroke-width=".5"/><text x="${X(vx)}" y="${H - mb + 15}" font-size="10" text-anchor="middle" fill="var(--muted)">${nf(vx, 1)}</text>`;
+    s += `<line x1="${ml}" y1="${Y(vy)}" x2="${W - mr}" y2="${Y(vy)}" stroke="var(--rule)" stroke-width=".5"/><text x="${ml - 6}" y="${Y(vy) + 3}" font-size="10" text-anchor="end" fill="var(--muted)">${nf(vy, 2)}</text>`; }
+  s += `<text x="${(ml + W - mr) / 2}" y="${H - 6}" font-size="11.5" text-anchor="middle" fill="var(--ink)">f₂ : NESM garanti (mm) — à maximiser →</text><text transform="translate(13 ${(mt + H - mb) / 2}) rotate(-90)" font-size="11.5" text-anchor="middle" fill="var(--ink)">f₃ : couple C₂ requis (N·m) — à minimiser</text>`;
+  const f1s = pts.map((r) => r.f1_masse_pattes), a = Math.min(...f1s), b = Math.max(...f1s);
+  for (const r of pts) s += `<circle cx="${X(r.f2_nesm)}" cy="${Y(r.f3_couple_C2)}" r="1.8" fill="var(--muted)" opacity="${(0.55 - 0.4 * ((r.f1_masse_pattes - a) / ((b - a) || 1))).toFixed(2)}"/>`;
+  fr.forEach((r, i) => { s += `<circle class="pt" data-src="front" data-i="${i}" cx="${X(r.f2_nesm)}" cy="${Y(r.f3_couple_C2)}" r="3.6" fill="none" stroke="var(--accent)" stroke-width="1.2"><title>front 3D : L2 ${nf(r.L2, 1)}, L3 ${nf(r.L3, 1)} ; NESM ${nf(r.f2_nesm, 2)} ; C2 ${nf(r.f3_couple_C2, 2)} ; ${r.servo_C1}/${r.servo_C2}/${r.servo_C3}</title></circle>`; });
+  rf.forEach((r, i) => { s += `<circle class="pt" data-src="rob" data-i="${i}" cx="${X(r.f2_nesm)}" cy="${Y(r.f3_couple_C2)}" r="4.4" fill="var(--accent)"><title>front robuste (${nf(100 * r.taux_reussite, 0)} %) : L2 ${nf(r.L2, 1)}, L3 ${nf(r.L3, 1)} ; NESM ${nf(r.f2_nesm, 2)} ; C2 ${nf(r.f3_couple_C2, 2)} ; ${r.servo_C1}/${r.servo_C2}/${r.servo_C3}</title></circle>`; });
+  const ch = res.res.choix || {}, star = (cx, cy, R) => Array.from({ length: 10 }, (_, k) => { const ang = -Math.PI / 2 + (k * Math.PI) / 5, rr = k % 2 ? R * 0.45 : R; return `${cx + rr * Math.cos(ang)},${cy + rr * Math.sin(ang)}`; }).join(" ");
+  if (ch.coude) s += `<polygon points="${star(X(ch.coude.f2_nesm), Y(ch.coude.f3_couple_C2), 11)}" fill="var(--bad)" stroke="var(--panel)" stroke-width="1"><title>coude</title></polygon>`;
+  if (ch.couple_min) s += `<rect x="${X(ch.couple_min.f2_nesm) - 5}" y="${Y(ch.couple_min.f3_couple_C2) - 5}" width="10" height="10" transform="rotate(45 ${X(ch.couple_min.f2_nesm)} ${Y(ch.couple_min.f3_couple_C2)})" fill="var(--warn)" stroke="var(--panel)"><title>plus petit couple C2 du front</title></rect>`;
+  s += `</svg></div><div class="legend"><span><i style="background:var(--muted);opacity:.5"></i>designs admissibles (gris plus foncé = plus léger)</span><span><i style="border:1.5px solid var(--accent);background:transparent"></i>front de Pareto 3D (nominal)</span><span><i style="background:var(--accent)"></i>front robuste</span><span><i style="background:var(--bad)"></i>coude</span><span><i style="background:var(--warn)"></i>C₂ minimal</span></div>`;
+  return s;
+}
+function renderOpt(res, o, ms) {
+  const R = res.res, eng = OPT.engine === "py" ? "Python complet" : "JavaScript";
+  let h = `<div class="info" style="margin-top:12px"><div>moteur <b>${eng}</b></div><div>durée <b>${nf(ms / 1000, 0)} s</b></div><div>combinaisons testées <b>${R.combos.length}</b></div><div>designs admissibles <b>${R.admissibles}</b></div><div>front de Pareto 3D <b>${R.pareto}</b></div><div>candidats Monte-Carlo <b>${R.candidats}</b></div><div>robustes (≥ ${nf(100 * (S.p.robust ? S.p.robust.pass_rate : 0.95), 0)} %) <b>${R.robustes}</b></div><div>front robuste <b>${R.pareto_robuste}</b></div><div>C₂ requis min. <b>${nf(R.min_couple_C2, 2)} N·m</b></div><div>NESM max <b>${nf(R.max_nesm, 1)} mm</b></div></div>`;
+  const rows = []; for (const [k, lab] of KEYS_CH) if (R.choix && R.choix[k]) rows.push([k, lab, R.choix[k]]);
+  if (!rows.length) h += `<p class="note" style="margin-top:10px"><span class="pill bad">aucun design</span> Aucun design admissible avec ces entrées et ces servos. Élargissez les bornes, autorisez d'autres servos, ou assouplissez les marges.</p>`;
+  else {
+    if (R.choix.meilleur_non_robuste) h += `<p class="note" style="margin-top:10px"><span class="pill warn">attention</span> Aucun candidat ne réussit le seuil de robustesse : meilleur candidat non robuste affiché.</p>`;
+    h += `<div class="tw" style="margin-top:10px"><table><thead><tr><th>Choix</th><th>L₂</th><th>L₃</th><th>α</th><th>β</th><th>ξ</th><th>h</th><th>C1 / C2 / C3</th><th>f₁ kg</th><th>f₂ NESM</th><th>f₃ C₂ N·m</th><th>% blocage C₂</th><th>MC</th><th>bornes actives</th><th></th></tr></thead><tbody>`;
+    rows.forEach(([k, lab, r]) => { h += `<tr><td>${esc(lab)}</td><td>${nf(r.L2, 1)}</td><td>${nf(r.L3, 1)}</td><td>${nf(r.alpha, 1)}</td><td>${nf(r.beta, 1)}</td><td>${nf(r.xi, 1)}</td><td>${nf(r.h, 1)}</td><td>${esc(r.servo_C1)} / ${esc(r.servo_C2)} / ${esc(r.servo_C3)}</td><td>${nf(r.f1_masse_pattes, 3)}</td><td>${nf(r.f2_nesm, 2)}</td><td>${nf(r.f3_couple_C2, 2)}</td><td>${nf(100 * r.frac_bloc_C2, 0)} %</td><td>${r.taux_reussite === null ? "—" : nf(100 * r.taux_reussite, 0) + " %"}</td><td>${(r.bornes_actives || []).join(", ") || "—"}</td><td><button class="btn" data-load="${k}">Charger</button></td></tr>`; });
+    h += `</tbody></table></div><p class="note">Un « borne active » signale un optimum collé à une borne de recherche : élargissez-la avant de conclure.</p>`;
+  }
+  h += optPlot(res);
+  h += `<div class="toolbar" style="margin-top:8px"><button class="btn" id="o-csv">Exporter le front robuste (CSV)</button><button class="btn" id="o-json">Exporter tous les résultats (JSON)</button></div>`;
+  $("o-out").innerHTML = h;
+  $("o-out").querySelectorAll("[data-load]").forEach((b) => b.addEventListener("click", () => loadDesign(R.choix[b.dataset.load], o)));
+  $("o-out").querySelectorAll(".pt").forEach((c) => c.addEventListener("click", () => loadDesign((c.dataset.src === "rob" ? res.rob_front : res.front)[+c.dataset.i], o)));
+  const dl = (name, txt, type) => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([txt], { type })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); };
+  $("o-csv").addEventListener("click", () => { const rf = res.rob_front.length ? res.rob_front : res.front; if (!rf.length) return; const ks = Object.keys(rf[0]); dl("front_robuste.csv", [ks.join(",")].concat(rf.map((r) => ks.map((k) => r[k]).join(","))).join("\n"), "text/csv"); });
+  $("o-json").addEventListener("click", () => dl("optimisation_gr2.json", JSON.stringify({ options: o, entrees: S.p, resultats: res }), "application/json"));
+}
+
+// --------------------------------------------------------------- init
+buildControls(); buildOpt(); bindSegs(); document.querySelectorAll('#seg-ref button').forEach((b) => b.addEventListener('click', () => { if (b.disabled) return; CMP.ref = b.dataset.v; setSeg('seg-ref', CMP.ref); if (S.r) renderCompare(S.r); })); buildSweep(); renderMethod();
+document.getElementById("sel-phase").addEventListener("change", (e) => { S.sel.phase = +e.target.value; S.sel.state = S.r.detail[S.sel.phase].length > 1 ? 1 : 0; renderPhaseSelect(S.r); renderPhases(S.r); renderViews(S.r); });
+document.getElementById("sel-state").addEventListener("change", (e) => { S.sel.state = +e.target.value; renderViews(S.r); });
+document.getElementById("sel-leg").addEventListener("change", (e) => { S.sel.leg = +e.target.value; renderViews(S.r); });
+schedule();
+</script>

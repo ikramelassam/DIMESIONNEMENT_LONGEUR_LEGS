@@ -1,0 +1,104 @@
+{
+ "E400_xilibre": [
+  {
+   "tag": "E400_xilibre",
+   "masse_servo_g": 14.0,
+   "apres_prefiltre": 2592,
+   "geometrie_ok": 2560,
+   "stabilite_ok": 2126,
+   "admissibles": 2126,
+   "C1_min": 0.11707425389268564,
+   "C2_min": 1.8083662099632187,
+   "C3_min": 0.24064620174614954,
+   "nesm_max": 12.156994350011175,
+   "masse_pattes_min": 0.5061158282895386,
+   "masse_CDC_min": 2.5461158282895386,
+   "span_C2_max": 124.74658966064453,
+   "L2L3_min": 152.27751279249787
+  },
+  {
+   "tag": "E400_xilibre",
+   "masse_servo_g": 126.0,
+   "apres_prefiltre": 2592,
+   "geometrie_ok": 2560,
+   "stabilite_ok": 2208,
+   "admissibles": 2153,
+   "C1_min": 0.16444550765286836,
+   "C2_min": 2.552676639938141,
+   "C3_min": 0.3186167067297276,
+   "nesm_max": 13.90124409566043,
+   "masse_pattes_min": 1.847961526299268,
+   "masse_CDC_min": 3.887961526299268,
+   "span_C2_max": 124.74658966064453,
+   "L2L3_min": 148.95297268405557
+  }
+ ],
+ "E400_xi45": [
+  {
+   "tag": "E400_xi45",
+   "masse_servo_g": 14.0,
+   "apres_prefiltre": 2566,
+   "geometrie_ok": 2508,
+   "stabilite_ok": 1424,
+   "admissibles": 1424,
+   "C1_min": 0.14809734178449002,
+   "C2_min": 2.548411416095955,
+   "C3_min": 0.8965926959562326,
+   "nesm_max": 11.969779720186054,
+   "masse_pattes_min": 0.5541198086738587,
+   "masse_CDC_min": 2.5941198086738586,
+   "span_C2_max": 128.24771118164062,
+   "L2L3_min": 226.35772943496704
+  },
+  {
+   "tag": "E400_xi45",
+   "masse_servo_g": 126.0,
+   "apres_prefiltre": 2566,
+   "geometrie_ok": 2508,
+   "stabilite_ok": 1606,
+   "admissibles": 1559,
+   "C1_min": 0.20652664922622532,
+   "C2_min": 3.537844958438313,
+   "C3_min": 1.1829383471672201,
+   "nesm_max": 13.823624217799548,
+   "masse_pattes_min": 1.8926968687580525,
+   "masse_CDC_min": 3.9326968687580526,
+   "span_C2_max": 128.24771118164062,
+   "L2L3_min": 217.98899499699473
+  }
+ ],
+ "OPT": [
+  {
+   "tag": "OPT",
+   "masse_servo_g": 14.0,
+   "apres_prefiltre": 1310,
+   "geometrie_ok": 798,
+   "stabilite_ok": 659,
+   "admissibles": 659,
+   "C1_min": 0.070904982187107,
+   "C2_min": 0.8474137648682388,
+   "C3_min": 0.2515781492621352,
+   "nesm_max": 11.638234405635671,
+   "masse_pattes_min": 0.4841217643275857,
+   "masse_CDC_min": 2.5241217643275857,
+   "span_C2_max": 112.46588897705078,
+   "L2L3_min": 118.33605606108904
+  },
+  {
+   "tag": "OPT",
+   "masse_servo_g": 126.0,
+   "apres_prefiltre": 1310,
+   "geometrie_ok": 798,
+   "stabilite_ok": 702,
+   "admissibles": 693,
+   "C1_min": 0.09387045105461561,
+   "C2_min": 1.1885261645848681,
+   "C3_min": 0.348958865281347,
+   "nesm_max": 13.001995442288774,
+   "masse_pattes_min": 1.8281217643275858,
+   "masse_CDC_min": 3.8681217643275856,
+   "span_C2_max": 111.07151794433594,
+   "L2L3_min": 118.33605606108904
+  }
+ ]
+}

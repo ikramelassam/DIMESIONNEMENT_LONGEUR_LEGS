@@ -1,0 +1,124 @@
+<h1>ξ = 45° : stabilité, couples et choix des servos</h1>
+<p class="sub">Analyse rigoureuse du modèle de pattes Gr2 · optimisation complète relancée (ξ libre, ξ = 45°, variantes de moteurs) · raisonnement physique et mathématique</p>
+
+<div class="callout concl">
+<b>Réponses en bref.</b>
+<ol>
+<li><b>Le S3306 en C2 : oui, obligatoire.</b> Quel que soit ξ, le couple minimal requis en C2 vaut {{V:minC2_A}} N·m sur tous les designs admissibles, alors que le S-U400 n'offre que 0,58 N·m utilisables. Le S3306 <i>est</i> le moteur à 2,354 N·m du catalogue. Pour le genou (C3), tout dépend de ξ : le S-U400 suffit vers ξ ≈ 77° (0,54 N·m requis, limite 0,58), il ne suffit pas à 45° (0,97 N·m requis). Avec d'autres moteurs (§5) le résultat change nettement : en supposant 4 MX-64AT (6,0 N·m) en C2, on atteint un NESM de plus de 12 mm <i>même à 45°</i> ; la limite principale est donc le couple du S3306, pas la géométrie à 45°.</li>
+<li><b>« Même R, même X, alors pourquoi 0,97 contre 0,54 ? »</b> Au repos les couples sont en effet identiques entre 45° et 77°. Mais l'optimiseur ne calcule pas les couples au repos : il les calcule pendant les phases de marche, où la réaction du sol sur un pied vaut $R_i = M g \lambda_i$ (part de poids λ imposée par la position du CdG, pas $Mg/4$) et où le bras de levier $X$ dépend de la pose de la patte après le décalage du corps. Le §2 refait le calcul à la main et retrouve 0,850 et 0,562 N·m (phase avant_RL) au millième près.</li>
+<li><b>La masse des moteurs est prise en compte</b>, à trois endroits : dans la masse portée $M_c$ (donc dans toutes les réactions), dans le CdG des pattes, et dans le couple de la patte en vol (servo du genou). Détail au §1.7.</li>
+<li><b>La marge de stabilité baisse</b> parce que le NESM est quadratique en la distance au bord du polygone d'appui ($\approx d^2/2z$ avec $z \approx 86$ mm) : 10,5 mm de distance donnent seulement 0,64 mm de NESM. À 45° les pattes ne peuvent pas décaler le corps aussi loin qu'à 77° (§3).</li>
+<li><b>Optimisation complète.</b> Avec le catalogue réellement disponible (S3306 / S-U400 / SG90), tous les {{V:nB_front}} points du front de Pareto à ξ = 45° sont dominés par un point du front à ξ libre ; aucun point du front libre n'est dominé (§4). Le meilleur compromis à 45° pèse {{V:coudeB_f1}} kg de pattes contre {{V:coudeA_f1}} kg, avec un NESM de {{V:coudeB_f2}} mm contre {{V:coudeA_f2}} mm.</li>
+<li><b>Limite à connaître :</b> la grille de balancement (pas de 12 mm) rend les chiffres à 45° pessimistes. Avec un pas de 3 mm, le NESM à 45° passe de 0,64 à 1,47 mm et le couple C3 de 0,97 à 0,78 N·m. Les conclusions tiennent (§3.5), les valeurs exactes non.</li>
+</ol></div>
+
+<h2>1. Ce que calcule le programme, équation par équation</h2>
+<p>Le programme n'est pas un apprentissage : c'est un contrôle <b>quasi-statique</b>. Pour un design $x=(L_2,L_3,\alpha,\beta,\xi)$, un choix de servos et un scénario de CdG, il vérifie que 14 phases du cahier des charges sont réalisables et mesure trois objectifs. Tout est en mm, kg, N·m, degrés ; le repère corps a son origine au centre du châssis, $x$ vers l'avant, $y$ vers la gauche.</p>
+
+<h3>1.1 Géométrie au repos</h3>
+$$D_0=L_2\cos\alpha+L_3\cos\beta,\qquad H=L_3\sin\beta-L_2\sin\alpha,\qquad h=H-e$$
+<p>$D_0$ est la portée horizontale de l'axe C2 au pied, $H$ la hauteur de C2 au-dessus du sol, $h$ la garde au sol (châssis à $e = 15$ mm sous C2). Pour la patte avant-gauche en montage « dedans », l'axe C2 est en $P_0=(N/2-c,\,M/2-c)=(85,\,85)$ mm, la direction de la patte est $u=(\sin\xi,\cos\xi)$, et</p>
+$$\text{pied}=P_0+D_0\,u,\qquad C_1=P_0-L_1\,u .$$
+<p>Les trois autres pattes s'obtiennent par symétrie de signes. Au repos, les quatre pieds forment donc un rectangle de demi-côtés $a=85+D_0\sin\xi$ et $b=85+D_0\cos\xi$. Pour le design étudié ($L_2=60{,}08$, $L_3=71{,}92$, $\alpha=10{,}55°$, $\beta=99{,}76°$) : $D_0=46{,}9$ mm, $H=59{,}9$ mm, $h=44{,}9$ mm. Avec $\xi=45°$, $a=b=118{,}1$ mm ; avec $\xi=77{,}3°$, $a=130{,}7$ et $b=95{,}3$ mm. Le produit $ab$ est maximal à 45° ($\sin\xi+\cos\xi$ et $\sin\xi\cos\xi$ y sont maximaux) : c'est l'argument de l'équipe, et il est exact pour l'<b>aire</b> du polygone.</p>
+
+<h3>1.2 Les 14 phases</h3>
+<p>L'allure de référence est un crawl discontinu (le corps ne bouge que lorsque les 4 pieds sont au sol). Ce n'est pas l'allure finale (apprise par RL) : c'est un témoin d'existence. Ordre de levée RL, FL, RR, FR ; course du pied $R_s=40$ mm. Juste avant la levée de la patte $k$, les décalages des quatre pieds le long de $x$ sont $-R_s/2,\ +R_s/4,\ 0,\ -R_s/4$ pour $k$, la patte précédente, celle d'avant et la suivante. Pour <code>avant_RL</code> : RL $-20$ mm, FR $+10$, RR $0$, FL $-10$.</p>
+{{TBL_PHASES}}
+<p>Chaque phase regroupe des états qui partagent <b>la même position du corps</b> (le balancement). Pour <code>avant_RL</code> : l'état « pré-levée » (4 pieds), l'état « vol » (3 pieds, la patte RL passe à l'apex à 50 mm = obstacle 30 + levée 20) et l'état « post-pose » (4 pieds, RL à $+20$ mm). La position du corps doit donc convenir aux trois états à la fois.</p>
+
+<h3>1.3 Balancement et cinématique inverse</h3>
+<p>Le corps peut se décaler de $s=(s_x,s_y)$ sur une grille de $11\times11$ points entre $-60$ et $+60$ mm (pas de 12 mm), soit 121 positions. Pour chaque position, le pied reste fixe au sol : sa position relative au corps vaut $\text{pied}+\text{décalage}-s$ (puis rotation de $-\text{lacet}$ pour la phase de rotation). La cinématique inverse de chaque patte, branche « genou haut », avec $D=r_h-L_1$ ($r_h$ = distance horizontale de C1 au pied) et $H_z=H-z_{pied}$ :</p>
+$$d=\sqrt{D^2+H_z^2},\quad \psi=\arccos\frac{L_2^2+d^2-L_3^2}{2L_2d},\quad \alpha=\psi-\operatorname{atan2}(H_z,D),\quad \beta=\operatorname{atan2}(H_z+L_2\sin\alpha,\;D-L_2\cos\alpha)$$
+<p>avec $\theta_1$ le lacet de la coxa, $\theta_2=\alpha$ et $\theta_3=\alpha+\beta$. Une position est géométriquement valide si, pour <i>chaque</i> patte de l'état : $|L_2-L_3|+5\le d\le L_2+L_3-5$ (marge de portée), $D>0$ (le pied reste devant l'axe C2), $20°\le\theta_3\le160°$, le pied est à plus de 10 mm du contour du châssis en $x$ <i>ou</i> en $y$, l'axe C2 déborde de 10 mm au plus du châssis, et les pattes d'un même côté sont à plus de 30 mm l'une de l'autre.</p>
+
+<h3>1.4 Centre de gravité</h3>
+<p>Pour un état et un décalage : $G=\dfrac{m_bG_b+\sum_i m_ip_i}{M}$ avec $M=m_b+4\,m_{leg}$. Les $m_ip_i$ des pattes viennent de leurs pièces placées dans la pose calculée : chaque servo est une masse ponctuelle sur son axe (C1 sur C1, C2 sur C2, C3 au genou), les segments sont uniformes (0,162 kg/m), plus 15 g d'équerre par articulation et 10 g de pied. En mode <i>exact</i> (celui de l'optimisation complète) ce sont les masses des servos réellement choisis. La hauteur de $G_b$ est comptée depuis le dessous du châssis, donc à $h+z_{rel}$ du sol.</p>
+
+<h3>1.5 Le CdG « pire cas » (scénario S2)</h3>
+<p>Le CdG du corps (châssis 1,5 kg + batterie 0,54 kg + bras 0,40 kg + objet 0,10 kg) dépend de deux choses mal connues : la position de la batterie (zone $x\in[-80,40]$, $y\in[-30,30]$, $z\in[10,25]$ mm) et la posture du bras. Les trois postures : <i>replié</i> ($\varphi=(100°,160°)$, sans objet), <i>transport</i> ($(90°,-90°)$, objet tenu) et <i>tendu</i> ($(0°,0°)$, objet tenu). En marche S2 retient {replié, transport} ; pour la saisie {replié, transport, tendu}. Le CdG étant affine en la position de la batterie, ses extrêmes sont atteints aux 8 coins de la zone : on calcule donc $8\times$ (nombre de postures) CdG et on prend la boîte qui les contient.</p>
+{{TBL_COMBOS}}
+<p>Le pire cas n'est donc pas <i>une</i> combinaison : c'est une boîte. La combinaison qui pousse le CdG le plus vers l'avant est <i>batterie devant + bras en transport</i> en marche ($x=30{,}7$ mm) ou <i>batterie devant + bras tendu</i> en saisie ($x=41{,}8$ mm) ; vers l'arrière, <i>batterie derrière + bras replié</i> ($x=-5{,}7$ mm) ; le plus haut, <i>batterie en haut + bras en transport</i> ($z=39{,}0$ mm). Le bras monte à la fois la masse (2,54 kg avec l'objet) et décale le centre de la boîte vers l'avant : $x_c=+12{,}5$ mm en marche. C'est pourquoi les phases où une patte <i>avant</i> se lève sont les plus critiques.</p>
+<p>La demi-boîte utilisée dans une phase est $h_{xy}=h_b\,\dfrac{m_b}{M}+\varepsilon_{cdg}$ (avec $\varepsilon_{cdg}=10$ mm d'incertitude sans CAO). Pour la marche : $18{,}22\times 2{,}54/4{,}38+10=20{,}6$ mm en $x$ et $6{,}64\times0{,}58+10=13{,}9$ mm en $y$, 12,8 mm en $z$. Ces 20,6 × 13,9 mm sont ce que l'optimiseur retranche de chaque marge de stabilité.</p>
+
+<h3>1.6 Marge de stabilité (SSM, NESM) et réactions du sol</h3>
+<p>Pour chaque arête $k$ du polygone d'appui, de normale intérieure unitaire $n_k$ et de point $P_k$, la distance du CdG est $d_k=n_k\cdot(G-P_k)$. Sur la boîte de CdG, le pire coin donne exactement (fonction d'appui d'un rectangle) :</p>
+$$d_k^{\min}=d_k(G_c)-|n_{k,x}|\,h_x-|n_{k,y}|\,h_y,\qquad \mathrm{SSM}=\min_k d_k^{\min}$$
+<p>Le NESM (Hirose) est la hauteur dont il faut soulever le CdG pour basculer autour de l'arête. Sur sol plat, avec $z$ la hauteur maximale du CdG :</p>
+$$\mathrm{NESM}=\min_k\left(\sqrt{(d_k^{\min})^2+z^2}-z\right)\;\approx\;\frac{d^2}{2z}\quad(d\ll z)$$
+<p>Sur l'obstacle, où les pieds sont à des hauteurs différentes, le NESM est calculé en 3D aux 8 coins de la boîte. Pour les réactions : avec 3 pieds, $R_i=Mg\lambda_i$ où $\lambda_i$ sont les coordonnées barycentriques du CdG dans le triangle d'appui ; sur la boîte, la borne supérieure exacte est $\lambda_i^{\max}=\lambda_i(G_c)+|\partial_x\lambda_i|h_x+|\partial_y\lambda_i|h_y$ (bornée à $[0,1]$). Avec 4 pieds (hyperstatique), la part maximale d'un pied est le maximum sur les quatre triangles qui le contiennent : c'est une borne prudente, qui dépasse largement $1/4$.</p>
+
+<h3>1.7 Couples, et où entre la masse des moteurs</h3>
+<p>La masse portée vaut $M_c=m_{body}^{\max}+4\,m_{leg}$, avec $m_{body}^{\max}=2{,}54$ kg (le cas le plus lourd, objet inclus, utilisé dans <i>toutes</i> les phases : hypothèse conservatrice) et</p>
+$$m_{leg}=m_1+m_2+m_3+\lambda_l(L_1+L_2+L_3)+3m_{br}+m_{foot}.$$
+<p>Les trois masses de servos $m_1,m_2,m_3$ sont celles du triple choisi : avec trois S3306, $m_{leg}=0{,}459$ kg et $M_c=4{,}377$ kg (donc $Mg=42{,}9$ N). Pour chaque patte en appui, de réaction $R_i=M_cg\lambda_i$, les couples demandés sont</p>
+$$\tau_1=\lambda_i\,M_c\,a\,r_{h,i},\qquad \tau_2=M_cg\,\lambda_i\,D_i,\qquad \tau_3=M_cg\,\lambda_i\,L_3|\cos\beta_i|\quad(\times10^{-3}\ \text{pour passer des mm aux m}).$$
+<p>$\tau_2$ est le moment de $R_i$ autour de l'axe horizontal C2 (bras de levier = $D_i$), $\tau_3$ celui autour du genou (bras de levier = distance horizontale genou–pied, nulle quand le tibia est vertical, soit $\beta=90°$), $\tau_1$ celui de la force d'inertie horizontale $\lambda_iM_ca$ ($a=0{,}5$ m/s²) autour de l'axe vertical C1. On prend le maximum sur les pattes en appui et sur les états de la phase. La patte en vol ajoute des couples de pesanteur (segments, équerres, pied, et la masse $m_3$ du servo du genou) autour de C2 et C3. Un servo est admissible si tous ces couples restent sous $C_{cont}/SF=\text{frac}\cdot C_{blocage}/1{,}2$, avec frac $=1$ (hypothèse optimiste à fixer).</p>
+<p><b>La masse des moteurs entre donc :</b> (i) dans $M_c$, qui multiplie toutes les réactions ; (ii) dans les moments qui placent le CdG de chaque patte ; (iii) dans le couple de pesanteur de la patte en vol ($m_3$) ; (iv) dans $f_1$. Le servo C2 posé sur son propre axe ne crée pas de moment sur lui-même.</p>
+
+<h3>1.8 Choix de la position et objectifs</h3>
+<p>Pour chaque phase $p$, les positions admissibles sont celles qui vérifient la géométrie, $\mathrm{NESM}\ge0$, $\mathrm{SSM}-z\,a/g-\varepsilon_{pied}\ge0$ ($\varepsilon_{pied}=5$ mm) et les couples. On retient celle qui maximise le NESM. Les trois objectifs sont :</p>
+$$f_1=4\,m_{leg}\ (\min),\qquad f_2=\min_p\ \max_{s\in\text{adm.}}\mathrm{NESM}_p(s)\ (\max),\qquad f_3=\max_p\ \min_{s}\ \tau_2^{req}(s)\ (\min).$$
+<p>Un design est admissible si les 14 phases ont au moins une position admissible, si le pré-filtre passe (garde au sol ≥ 40 mm, gabarit 400 mm, $\theta_3$ de repos dans [20°, 160°]), si la course de chaque articulation tient dans la plage du servo moins 10°, et si la masse du robot sans bras ne dépasse pas 4 kg. L'optimisation complète enchaîne : échantillonnage de Sobol (8 192 points) → pré-filtre → évaluation exacte de chaque triple de servos → raffinement local → front de Pareto 3D → 6 couches de non-dominance (≤ 60 candidats) → Monte-Carlo (100 tirages : ±10 % masses et couples, ±2 mm, ±2°, ±10 mm de CdG) → front robuste (≥ 95 % de réussite) → choix du coude (point le plus proche de l'idéal, objectifs normalisés) et de l'ε-contrainte.</p>
+
+<h2>2. Pourquoi 0,97 N·m à 45° et 0,54 N·m à 77° avec le même R et le même X au repos</h2>
+<p>Au repos, la réaction est la même ($Mg/4$ par pied) et le bras de levier $D_0$ aussi : les couples au repos sont égaux. Mais le repos n'est pas une phase du calcul. En marche, trois choses changent par rapport au repos :</p>
+<ul>
+<li>$R_i=Mg\lambda_i$ avec $\lambda_i$ jusqu'à 0,65 (borne sur la boîte S2) et non 0,25 ;</li>
+<li>le corps est décalé de $s$ (jusqu'à 60 mm) : chaque pied se déplace, dans le repère de sa patte, de $-s\cdot u_i$, soit environ $|s|\cos(\text{angle entre }s\text{ et la patte})$ ;</li>
+<li>la patte s'adapte : $D_i$ change et le tibia s'incline, donc $\beta_i$ et $L_3|\cos\beta_i|$ changent.</li>
+</ul>
+<p>À 77° les pattes sont presque parallèles à $x$ ; un décalage latéral ($s_y=-60$) les déplace de $60\cos77{,}3°\approx13$ mm seulement, les tibias restent proches de la verticale ($\beta\approx84$–$93°$) et le bras de levier au genou reste de 4 à 8 mm. À 45° le même décalage déplace chaque patte d'environ $60\cos45°\approx42$ mm le long de son axe : la patte RR se replie ($D=24{,}6$ mm), son tibia s'incline à $\beta=119{,}5°$ et le bras de levier au genou monte à 35,4 mm, sous une réaction $\lambda=0{,}56$ (56 % du poids). Reconstruction à la main pour la phase avant_RL, état pré-levée (le plus chargé), servos S3306 partout ($M_cg=42{,}94$ N) :</p>
+{{TBL_RECON}}
+<p>Le programme donne exactement les mêmes nombres : $\tau=(0{,}102;\,1{,}568;\,0{,}850)$ N·m à 45° et $(0{,}120;\,1{,}520;\,0{,}562)$ N·m à 77,3°. Les valeurs 0,97 et 0,54 citées plus tôt sont le <i>maximum sur les 14 phases</i> du couple minimal sur les positions admissibles (colonne $\tau_3$ de $t_{\min}$) : la phase la plus chargée n'est pas avant_RL mais obstacle_FL / avant_FL.</p>
+
+<h2>3. Pourquoi la marge de stabilité diminue, et pourquoi 45° n'est pas le plus stable en marche</h2>
+<h3>3.1 L'argument géométrique de l'équipe est vrai, pour l'aire</h3>
+<p>Triangle d'appui de la phase avant_RL (pieds FL, FR, RR au repos avec leurs décalages) : aire 29 097 mm² à 45° contre 25 867 mm² à 77° ; rayon du cercle inscrit (marge maximale théorique pour un CdG ponctuel) 71,8 mm contre 66,4 mm. Si le corps pouvait se placer librement et si le CdG était connu, 45° gagnerait.</p>
+<h3>3.2 Mais la marge réelle dépend de la place pour balancer le corps</h3>
+<p>Le meilleur point du triangle (le centre du cercle inscrit) est à environ 68 mm du centre du châssis à 45°. L'atteindre demande à la patte FR un $D$ de $-13{,}6$ mm (pied derrière son propre axe : impossible). Les positions atteignables sont donc un sous-ensemble étroit de la grille. La figure 2 les montre pour la phase avant_RL : 19 positions sur 121 à 45°, 23 à 77° ; en dessous de $\xi\approx28°$, 33 positions.</p>
+<figure><img src="{{IMG:sway_maps}}" alt="Cartes de balancement"><figcaption>Figure 2 — Positions du corps (décalage en x et y) en phase avant_RL, S2, servos S3306 partout, mêmes $L_2,L_3,\alpha,\beta$. À 45° (gauche) la zone tenable se réduit à quelques cases au bord de la grille ; à 77,3° elle est plus large et son meilleur NESM est plus de deux fois supérieur.</figcaption></figure>
+<figure><img src="{{IMG:tripod}}" alt="Tripode"><figcaption>Figure 3 — Polygone d'appui à 3 pieds et boîte du CdG (rouge, 20,6 × 13,9 mm) à la position retenue. À 45° la distance minimale du pire coin de la boîte à l'arête la plus proche est de 10,5 mm en phase avant_FL, contre 27,8 mm à 77,3°.</figcaption></figure>
+<h3>3.3 Le NESM est quadratique : de petites distances donnent de très petites marges</h3>
+<p>Pour $d\ll z$, $\mathrm{NESM}\approx d^2/2z$. Phase critique avant_FL (patte avant-gauche en vol), état de vol : à 45°, $d=10{,}5$ mm et $z\approx86$ mm donnent $\mathrm{NESM}=0{,}64$ mm ; à 77,3°, $d=27{,}8$ mm donne 4,41 mm. Un écart de distance de 2,6 fois devient un écart de NESM de près de 7 fois. Les deux phases critiques sont celles où une patte <i>avant</i> se lève, parce que le bras décale le CdG vers l'avant (centre de boîte $x_c=+12{,}5$ mm).</p>
+<h3>3.4 Ce qui retire de la marge : attribution</h3>
+<p>On relâche une hypothèse à la fois, tout le reste égal (S2, servos S3306 partout, mêmes $L_2,L_3,\alpha,\beta$). $f_2$ est le NESM minimal sur les 14 phases.</p>
+{{TBL_ATTR}}
+<p>Deux effets dominent : (a) l'<b>incertitude du CdG</b> : la retirer fait passer $f_2$ de 0,6 à 3,9 mm à 45° et de 4,4 à 10,8 mm à 77° ; le simple passage du CdG nominal (S1, sans boîte) donne 6,9 mm contre 13,1 mm ; (b) à 45° la <b>marge de portée</b> de 5 mm est active (0,6 → 1,7 mm), ce qui confirme que les pattes y sont à la limite de leur course. La contrainte « pied hors du châssis » divise par deux ou trois le nombre de positions atteignables (de 61 à 19 à 45°) mais ne limite pas directement le meilleur NESM. L'erreur de pied, l'accélération, l'écart de pattes et le débord de C2 n'ont aucun effet ici. Élargir le balancement à ±100 mm ne change presque rien (0,8 et 3,1 mm) : voir §3.5 pour l'effet du pas de grille.</p>
+<figure><img src="{{IMG:xi_sweep}}" alt="Balayage de xi"><figcaption>Figure 1 — Balayage de ξ pour le design fixe. (a) $f_2$ en S1 et S2 : creux entre 30° et 50°. (b) nombre de positions atteignables en phase avant_RL. (c) couples requis minimaux en C2 et C3 ; la limite utilisable du S-U400 (0,58 N·m) est franchie entre 10° et 70° environ. Traits verticaux : 45° et 77,3°.</figcaption></figure>
+<h3>3.5 Sensibilité au pas de la grille de balancement</h3>
+<p>Le NESM étant quadratique, un pas de 12 mm est grossier. Même design, mêmes servos :</p>
+{{TBL_GRID}}
+<p>À 45°, la valeur de $f_2$ monte quand la grille s'affine (0,64 → 1,47 mm) et le couple C3 baisse (0,97 → 0,78 N·m) ; à 77,3° ils ne bougent presque pas. Conclusion : l'écart reste net (3 fois sur $f_2$, 65 % sur $\tau_3$), le S-U400 reste insuffisant au genou à 45° (0,78 contre 0,58) et suffisant à 77°, mais <b>les chiffres de l'optimiseur à 45° sont pessimistes</b>. Une vérification finale du design retenu à pas de 3 mm est recommandée.</p>
+
+<h2>4. Optimisation complète : ξ libre contre ξ = 45°</h2>
+<p>Montage « dedans », scénario S2, six triples de servos (C2 = S3306 imposé par le couple, C1 ∈ {SG90, S-U400, S3306}, C3 ∈ {S-U400, S3306}), 8 192 points de Sobol, mêmes bornes de recherche que l'optimiseur normal ($L_2\in[40,140]$, $L_3\in[60,200]$, $\alpha\in[2,70]$, $\beta\in[30,130]$). Le cas « ξ libre » reproduit exactement les résultats sauvegardés ({{V:reproA}}).</p>
+{{TBL_AB}}
+<p>Tous les points du front à 45° sont dominés par un point du front libre. À masse de pattes plafonnée :</p>
+{{TBL_CAP}}
+<figure><img src="{{IMG:pareto_AB}}" alt="Fronts"><figcaption>Figure 4 — Designs admissibles (nuage) et fronts de Pareto (points) pour ξ libre et ξ = 45°. À 45° on perd à la fois du NESM et du couple, et on ne descend pas sous 1,39 kg de pattes.</figcaption></figure>
+<h3>4.1 Où se trouvent les designs admissibles en ξ</h3>
+{{TBL_BINS}}
+<p>Les designs admissibles se concentrent autour de 0–10° et 60–80°, avec un creux entre 30° et 50° : 33 et 44 géométries distinctes (classes 30–40° et 40–50°) contre 64 à 2 053 dans les autres classes. Le nombre de lignes est biaisé par le raffinement local (qui échantillonne près du front), mais le creux se voit aussi sur le nombre de géométries distinctes et sur le meilleur $f_2$ de la classe (2,2 mm contre 5,0 à 6,4 mm pour 60–80°) et sur la masse minimale (1,40 kg contre 1,03 à 1,04 kg).</p>
+<h3>4.2 Servos</h3>
+{{TBL_SERVOS}}
+<p>À 45°, <b>C3 doit être un S3306</b> : avec un S-U400 au genou, aucun design n'est admissible, même en cherchant dans toutes les longueurs de patte. À ξ libre, le S-U400 au genou convient et fait gagner environ 0,35 kg de pattes.</p>
+
+<h2>5. Quel moteur : S3306, ou un autre à 2,35 N·m et plus ?</h2>
+<p>Le S3306 a un couple de blocage de 2,354 N·m ; c'est <i>le</i> moteur à 2,35 N·m du catalogue. Les seuls autres candidats proches sont les Dynamixel (AX-12A 1,5 N·m, MX-28T 2,5 N·m, MX-64AT 6,0 N·m, MX-106T 8,4 N·m), dont le stock est de <b>1 unité</b> : il en faut 4 identiques par type d'articulation, donc ils sont exclus d'office. Figure 5 : couples requis comparés aux limites utilisables.</p>
+<figure><img src="{{IMG:servo_need}}" alt="Servos"><figcaption>Figure 5 — Barres : couple utilisable (blocage ÷ 1,2) et masse ; lignes : couples minimaux requis par la patte S2 « dedans » (grille de 12 mm). Le C2 (≈ 1,4–1,7 N·m) ne passe qu'avec S3306 ou Dynamixel ; le C3 passe avec S-U400 à 77° mais pas à 45°.</figcaption></figure>
+{{SEC5}}
+
+<h2>6. Ce qu'il faut retenir et ce qui reste ouvert</h2>
+<ul>
+<li><b>45° est le meilleur choix pour l'aire du polygone à l'arrêt, pas pour la marche avec des pattes aussi courtes et des servos de 2,35 N·m.</b> Avec le catalogue disponible, imposer 45° coûte, dans ce modèle, {{V:cost_mass}} de masse de pattes, {{V:cost_nesm}} de NESM et {{V:cost_tau}} de couple C2, et force le S3306 au genou.</li>
+<li>L'équipe peut réintroduire 45° de deux façons : (i) avec le catalogue actuel, en acceptant le S3306 en C2 <i>et</i> C3 et un NESM de l'ordre de 1,3 mm (1,5 mm à pas fin) en pire cas ; (ii) en se procurant des servos plus puissants (§5) et des pattes plus longues, ce qui donne un NESM de 3 à 12 mm à 45°. Le facteur limitant est le couple, pas l'angle.</li>
+<li><b>Entrées qui pilotent le résultat :</b> la boîte de CdG (batterie, bras), $\varepsilon_{cdg}=10$ mm, frac = 1, SF = 1,2, le châssis 200 × 200 mm, la course $R_s=40$ mm, $e$ et $c$ de 15 mm. Elles sont toutes à confirmer ; en particulier la position réelle de la batterie et la posture du bras en marche.</li>
+<li><b>Ouvert :</b> l'explication complète du creux autour de 40–50° repose sur les valeurs de $D$ et les relaxations ci-dessus ; je ne l'ai pas démontrée dans le cas général. Les chiffres à 45° dépendent du pas de grille (§3.5). Le modèle est quasi-statique : les couples dynamiques réels de la marche apprise par RL ne sont pas évalués.</li>
+</ul>
+<h3>Références citées dans le code du programme</h3>
+<ul class="src">
+<li>Hirose, Tsukagoshi, Yoneda (marge NESM) ; McGhee et Frank (marge de stabilité statique), telles que citées dans <code>gr2/statics.py</code>.</li>
+<li>Zeleny 1973 ; Miettinen 1999, ch. 3.2 (programmation de compromis, choix du coude).</li>
+<li>Gonzalez de Santos 1998 (crawl discontinu) ; Zamani 2018 (levée de patte) ; Bjelonic 2023 (incertitudes de 10 %).</li>
+<li>e-manual Robotis AX-12A (charge stable ≤ 1/5 du couple de blocage, utilisée pour le paramètre frac).</li>
+</ul>

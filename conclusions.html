@@ -1,0 +1,38 @@
+<div class="key">
+<p><b>Ce que montrent les calculs (avec les entrées hypothétiques).</b> Les chiffres détaillés sont dans les tableaux de la section 9, générés automatiquement.</p>
+<ol>
+<li><b>C2 est l'articulation critique ; C1 est presque libre.</b>
+  <ul>
+    <li>Sur les fronts robustes, C1 reçoit presque toujours le servo le plus léger du catalogue (une seule exception). Ses couples vont de 0,07 à 0,19 N·m, avec une accélération de référence de 0,5 m/s².</li>
+    <li>C2 demande un couple minimal de 0,7 à 2,9 N·m selon le design et le scénario. C3 demande de 0,5 à 2,7 N·m : il n'est pas négligeable, surtout pieds sur l'obstacle.</li>
+    <li>Il est donc justifié d'utiliser des servos différents par articulation.</li>
+  </ul></li>
+<li><b>Le servo de l'équipe (2,35 N·m) ne suffit en C2 que si le CdG est bien connu.</b>
+  <ul>
+    <li>En scénario nominal (S1), les designs de compromis l'utilisent en C2 avec un taux d'utilisation de 0,74 à 0,82, sous la limite 1/SF = 0,83.</li>
+    <li>En pire cas (S2), <b>tous</b> les designs du front robuste utilisent un servo plus fort en C2. Pour presque tous, le couple minimal requis (1,7 à 2,9 N·m) dépasse les 1,96 N·m autorisés avec SF = 1,2.</li>
+    <li>Pour lever cette incertitude, il faut d'abord une CAO (même grossière) qui réduit la boîte du CdG, et le vrai couple continu du servo.</li>
+  </ul></li>
+<li><b>Le corps se met le plus bas possible.</b> La garde au sol des designs retenus vaut 44 à 52 mm, pour un minimum de 40 mm : la contrainte G5 est presque toujours active. Le NESM préfère un CdG bas (démonstration D11).</li>
+<li><b>Le front nominal est fragile.</b> Plusieurs de ses points réussissent moins de 25 % des tirages Monte-Carlo, parce qu'ils sont collés aux contraintes. La décision se prend donc sur le front <b>robuste</b>.</li>
+<li><b>ξ n'est pas fortement déterminé par ces deux objectifs.</b> Le front robuste contient deux familles : ξ ≈ 5 à 30° (pattes latérales, moins de couple en C2 aux extrémités de course) et ξ ≈ 55 à 75° (pattes en diagonale, polygone plus long). À masse et NESM proches, le choix de ξ peut se faire sur d'autres critères : couloir libre pour le bras, rotation sur place, encombrement.</li>
+<li><b>Montage dedans ou dehors.</b> Les fronts sont proches. « Dehors » perd plus de candidats au pré-filtre (gabarit) mais atteint des masses un peu plus faibles en S1. Pour un châssis de 230 × 190 mm (hypothèse), aucun montage ne domine clairement.</li>
+<li><b>« Tout au pire en même temps ».</b> Couple −10 %, masses +10 %, CdG +10 mm et marges reculées, appliqués ensemble : aucun design ne passe en S2. Les marges se cumulent. Il ne faut pas les empiler à l'aveugle, il faut réduire l'incertitude à la source.</li>
+<li><b>Ce qui compte le plus (étude de sensibilité, dedans, S2).</b>
+  <ul>
+    <li>L'<b>incertitude sur le CdG</b> domine : de 5 à 20 mm, le nombre de couples (design, servos) admissibles passe de 2337 à 80, et le NESM maximal de 10,7 à 2,6 mm.</li>
+    <li>Viennent ensuite le <b>coefficient de sécurité</b> (de 1,0 à 1,5 : 1533 → 331) et le <b>NESM minimal</b> (de 0,5 à 2 mm : 1579 → 509).</li>
+    <li>Le couple du servo de l'équipe compte moins (de ×0,5 à ×1 : 573 → 1072), parce que d'autres servos peuvent le remplacer. La course R_s compte peu.</li>
+    <li>Un châssis plus lourd <i>aide</i> en S2. Un corps lourd et bas dilue l'effet du bras, qui est l'élément incertain, et abaisse le CdG.</li>
+    <li><b>Priorité n° 1 : réduire l'incertitude sur le CdG</b> (CAO ou pesée).</li>
+  </ul></li>
+</ol>
+<p><b>Pour obtenir le dimensionnement réel</b>, il faut :</p>
+<ul>
+<li>le couple <b>continu</b> du servo de l'équipe ;</li>
+<li>un catalogue de servos réellement achetables ;</li>
+<li>les masses et CdG du châssis, de la batterie et du bras (CAO ou pesée) ;</li>
+<li>L₁,min ; e ; les dimensions du châssis.</li>
+</ul>
+<p>Avec ces données, on relance le programme sans rien changer à la méthode.</p>
+</div>

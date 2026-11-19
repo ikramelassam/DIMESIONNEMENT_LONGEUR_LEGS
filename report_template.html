@@ -1,0 +1,364 @@
+<title>Dimensionnement des pattes Gr2</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Mise en page : rapport technique d'une colonne (~72 car.), sommaire collant a gauche sur grand ecran. */
+:root{
+  --bg:#f7f8fa; --paper:#ffffff; --fg:#1b2430; --muted:#5b6676; --rule:#d6dce4;
+  --accent:#1f5a96; --accent-soft:#e3edf8; --amber:#b5651d; --amber-soft:#fbefe3; --warn:#8a1c1c; --warn-soft:#fbe9e9;
+  --f-head:"IBM Plex Serif",Georgia,serif; --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#11161d; --paper:#161d26; --fg:#e4e9f0; --muted:#9aa6b6; --rule:#2c3644;
+  --accent:#7fb2e8; --accent-soft:#1c2c40; --amber:#e3a35e; --amber-soft:#3a2a18; --warn:#f19a9a; --warn-soft:#3b1e1e; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11161d; --paper:#161d26; --fg:#e4e9f0; --muted:#9aa6b6; --rule:#2c3644;
+  --accent:#7fb2e8; --accent-soft:#1c2c40; --amber:#e3a35e; --amber-soft:#3a2a18; --warn:#f19a9a; --warn-soft:#3b1e1e; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:15px/1.6 var(--f-body);}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr);gap:32px;max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:28px 64px}
+@media (min-width:1000px){.wrap{grid-template-columns:230px minmax(0,1fr)}}
+nav.toc{font-size:13px;color:var(--muted)}
+@media (min-width:1000px){nav.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);align-self:start;max-height:92vh;overflow:auto}}
+nav.toc a{color:var(--muted);text-decoration:none;display:block;padding:2px 0}
+nav.toc a:hover,nav.toc a:focus-visible{color:var(--accent)}
+main{min-width:0;background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding-inline:clamp(16px,4vw,48px);padding-block:32px 48px}
+h1,h2,h3,h4{font-family:var(--f-head);text-wrap:balance;line-height:1.25}
+h1{font-size:30px;margin:0 0 6px}
+h2{font-size:22px;margin:44px 0 10px;padding-top:12px;border-top:1px solid var(--rule)}
+h3{font-size:17px;margin:26px 0 6px}
+h4{font-size:15px;margin:18px 0 4px}
+p,li{max-width:74ch}
+.sub{color:var(--muted);margin:0 0 18px}
+.eyebrow{font:500 12px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.note{background:var(--amber-soft);border-left:3px solid var(--amber);padding:10px 14px;border-radius:4px;max-width:80ch}
+.warn{background:var(--warn-soft);border-left:3px solid var(--warn);padding:10px 14px;border-radius:4px;max-width:80ch}
+.key{background:var(--accent-soft);border-left:3px solid var(--accent);padding:10px 14px;border-radius:4px;max-width:80ch}
+.eq{font-family:var(--f-mono);font-size:13.5px;background:var(--accent-soft);padding:8px 12px;border-radius:4px;overflow-x:auto;white-space:pre;max-width:100%}
+code{font-family:var(--f-mono);font-size:13px}
+.tw{overflow-x:auto;margin:10px 0 18px;max-width:100%}
+table{border-collapse:collapse;font-size:13px}
+th,td{border-bottom:1px solid var(--rule);padding:6px 10px;text-align:left;vertical-align:top}
+th{font-weight:600;background:var(--accent-soft)}
+table.num td{font-variant-numeric:tabular-nums}
+td:first-child,th:first-child{min-width:150px}
+figure{margin:16px 0}
+figure{max-width:100%}
+figure img{display:block;max-width:100%;height:auto;border:1px solid var(--rule);border-radius:4px;background:#fff}
+figcaption{font-size:12.5px;color:var(--muted);margin-top:4px}
+.muted{color:var(--muted)}
+a{color:var(--accent);overflow-wrap:anywhere}
+.tag{font:500 11px var(--f-mono);padding:1px 6px;border-radius:3px;background:var(--accent-soft);color:var(--accent)}
+.tag.amber{background:var(--amber-soft);color:var(--amber)}
+</style>
+
+<div class="wrap">
+<nav class="toc" aria-label="Sommaire">
+  <div class="eyebrow">Sommaire</div>
+  <a href="#resume">1. Résumé</a>
+  <a href="#probleme">2. Le problème</a>
+  <a href="#methode">3. Choix de la méthode</a>
+  <a href="#modele">4. Le modèle</a>
+  <a href="#objectifs">5. Fonctions objectifs</a>
+  <a href="#contraintes">6. Contraintes</a>
+  <a href="#demarche">7. Démarche pas à pas</a>
+  <a href="#demos">8. Démonstrations et validation</a>
+  <a href="#resultats">9. Résultats</a>
+  <a href="#critique">10. Analyse critique et limites</a>
+  <a href="#suite">11. Prochaines étapes</a>
+  <a href="#sources">12. Sources</a>
+  <a href="#annexeA">Annexe A. Entrées</a>
+  <a href="#annexeB">Annexe B. Utiliser le programme</a>
+</nav>
+
+<main>
+<div class="eyebrow">Projet Gr2 · robot quadrupède araignée · pôle mécanique</div>
+<h1>Dimensionnement des pattes Gr2</h1>
+<p class="sub">Méthode, modèle, objectifs, contraintes et résultats du programme <code>gr2_dim</code> — architecture 2 (coxa horizontale, fémur vers le haut, tibia vers le bas).</p>
+
+<div class="warn"><b>À lire d'abord.</b> L'équipe n'a pas encore de CAO. Toutes les masses, positions de CdG, dimensions du châssis et le catalogue de servos (sauf le servo de l'équipe) sont des <b>valeurs hypothétiques</b>, marquées <code>[HYP]</code> dans <code>config.yaml</code>. Les chiffres de la section 9 montrent ce que la méthode produit et quels mécanismes dominent. Ils ne sont <b>pas</b> le dimensionnement final : il faut relancer le programme avec vos vraies données.</div>
+
+<h2 id="resume">1. Résumé</h2>
+<p><b>Ce que le programme cherche.</b> Les longueurs L₂ (fémur) et L₃ (tibia), la posture de repos (α, β, ξ) et, pour chaque articulation C1, C2, C3, le servo le plus léger du catalogue qui suffit. L₁ (coxa) est une entrée : on prend le minimum que permet la fabrication, car L₁ n'influe pas sur les couples de C2 et C3 (§4.6).</p>
+<p><b>Comment.</b>
+<ol>
+  <li>On échantillonne finement l'espace des dimensions et des postures (suite de Sobol).</li>
+  <li>Pour chaque candidat, on vérifie toutes les tâches du cahier des charges : marche avant et arrière, obstacle de 30 mm, rotation sur place, saisie avec le bras tendu. Le CdG est pris dans deux scénarios : <b>S1</b>, nominal (vos entrées) ; <b>S2</b>, pire cas (le CdG le plus défavorable dans une boîte de positions possibles).</li>
+  <li>On résout exactement le choix des servos.</li>
+  <li>On garde le front de Pareto entre deux objectifs : la masse des pattes et la stabilité (NESM).</li>
+  <li>On vérifie la robustesse par Monte-Carlo, et on choisit avec une règle explicite.</li>
+</ol>
+Le tout est fait pour les deux montages de la coxa : dedans et dehors.</p>
+{{CONCLUSIONS}}
+
+<h2 id="probleme">2. Le problème</h2>
+<h3>2.1 Exigences fixes (cahier des charges des encadrants)</h3>
+<div class="tw"><table>
+<thead><tr><th>Exigence</th><th>Valeur</th><th>Où elle entre dans le modèle</th></tr></thead><tbody>
+<tr><td>4 pattes à 3 DDL</td><td>C1 (axe vertical), C2, C3 (axes horizontaux)</td><td>géométrie (§4.2)</td></tr>
+<tr><td>Déplacement avant, arrière, rotation sur place</td><td>—</td><td>phases « avant », « arrière », « rotation » (§4.4)</td></tr>
+<tr><td>Vitesse maximale</td><td>0,2 m/s</td><td>plafond, géré par la commande : <b>pas</b> une contrainte de dimensionnement (décision d'équipe)</td></tr>
+<tr><td>Franchissement d'obstacles</td><td>30 mm</td><td>G5, phases « obstacle »</td></tr>
+<tr><td>Gabarit longueur × largeur</td><td>≤ 400 mm</td><td>G6 (au repos, décision d'équipe)</td></tr>
+<tr><td>Masse</td><td>« châssis 4 kg max »</td><td>G10 : robot <b>sans bras</b> ≤ 4 kg (interprétation de l'équipe)</td></tr>
+<tr><td>Autonomie</td><td>≥ 30 min</td><td>indirect : masse et couples (vérification après coup)</td></tr>
+<tr><td>Bras avec pince, charge de 100 g, saisie à ≥ 150 mm de la fixation</td><td>bras 0,4 kg (équipe)</td><td>masses et CdG (§4.5), phase « saisie »</td></tr>
+<tr><td>Apprentissage de la locomotion en simulation</td><td>—</td><td>le mouvement final est appris : le dimensionnement vérifie seulement qu'<b>au moins un</b> mouvement existe (G9)</td></tr>
+</tbody></table></div>
+
+<h3>2.2 Décisions d'équipe utilisées (remises en question au §10)</h3>
+<ul>
+<li>Architecture 2 ; coxa à l'intérieur du châssis (« dedans »), comparée ici au montage « dehors ».</li>
+<li>Servos différents autorisés pour C1, C2 et C3 (choisis dans une liste).</li>
+<li>CdG traité de deux façons : à partir des entrées (S1) et au pire cas (S2), faute de CAO.</li>
+<li>Obstacle sous le ventre autorisé : garde au sol h ≥ 30 mm + marge.</li>
+<li>Stabilité de la pince pendant la marche : négligée pour les pattes.</li>
+<li>Pas de centrale inertielle (IMU) : rediscutée au §10.</li>
+</ul>
+
+<h3>2.3 Sorties</h3>
+<p>Pour chaque cas (2 montages × 2 scénarios de CdG) :
+<ul>
+<li>le front de Pareto et le front robuste ;</li>
+<li>deux designs recommandés : le <b>point de coude</b> (meilleur compromis) et le <b>plus léger</b> qui garde un NESM ≥ 2 mm ;</li>
+<li>pour chacun : L₁, L₂, L₃, α, β, ξ, D, H₂, h, servo de chaque articulation, couples, taux d'utilisation, courses angulaires et taux de réussite sous incertitudes.</li>
+</ul></p>
+
+<h2 id="methode">3. Choix de la méthode : pourquoi celle-ci et pas une autre</h2>
+<p>Le problème est <b>multi-objectif</b> : alléger les pattes et les rendre plus stables sont deux buts qui s'opposent (§5). Il n'existe donc pas un seul optimum, mais un ensemble de compromis : le <b>front de Pareto</b>. Un design est sur le front si aucun autre n'est à la fois plus léger et plus stable. Plusieurs familles d'algorithmes peuvent le calculer :</p>
+<div class="tw"><table>
+<thead><tr><th>Méthode</th><th>Principe</th><th>Verdict pour Gr2</th></tr></thead><tbody>
+<tr><td><b>Échantillonnage dense + tri de Pareto</b> (retenu)</td><td>On évalue tous les candidats d'un échantillon qui remplit l'espace, puis on garde les non dominés.</td><td>5 variables continues seulement, et une évaluation rapide (~30 ms) : on peut tout calculer. Résultat déterministe et explicable, avec en prime les cartes de contraintes actives.</td></tr>
+<tr><td>Somme pondérée w₁f₁ + w₂f₂</td><td>On ramène les deux objectifs à un seul.</td><td><b>Rejetée.</b> Les poids sont arbitraires : chez Gülhan, le résultat dépend du poids W. Et elle ne trouve jamais les compromis situés dans une partie concave du front.</td></tr>
+<tr><td>ε-contrainte</td><td>« Minimiser la masse sous NESM ≥ ε », en faisant varier ε.</td><td><b>Retenue pour la décision finale</b> (§7, étape 9) : la règle est simple et défendable.</td></tr>
+<tr><td>NSGA-II (algorithme génétique multi-objectif)</td><td>Une population évolue, triée par non-dominance.</td><td>Utile si l'on ajoute des variables (position de la batterie, pattes avant ≠ arrière). Ici, il serait aléatoire et sans garantie, pour un problème qu'on peut calculer en entier. Zhang 2017 l'emploie (population de 400, 600 générations).</td></tr>
+<tr><td>Gradient (SLSQP, IPOPT)</td><td>Suit la pente de la fonction.</td><td><b>Rejeté.</b> Nos fonctions contiennent des min et des max sur les poses, donc des cassures. On risque des optimums locaux.</td></tr>
+<tr><td>Optimisation bayésienne</td><td>Peu d'évaluations, mais chacune coûteuse.</td><td>Plus tard, si l'on optimise sur des simulations MuJoCo ou d'apprentissage (Bjelonic 2023).</td></tr>
+<tr><td>Bi-niveau, contrôle optimal interne (Fadini 2024, Ha 2017)</td><td>Pour chaque design, on calcule son meilleur mouvement.</td><td>Repris sous forme <b>légère</b> : pour chaque phase, une boucle interne choisit la position du corps (§4.8). Le mouvement final sera appris : on ne l'optimise pas.</td></tr>
+</tbody></table></div>
+<p><b>Pourquoi un échantillonnage de Sobol plutôt qu'une grille.</b> À nombre de points égal, une suite de Sobol remplit l'espace plus uniformément qu'une grille régulière, dont les points s'alignent. Le front est ensuite <b>raffiné localement</b> : on ré-échantillonne autour de ses points, dans une boîte de ±5 % des plages, en 2 passes.</p>
+
+<h2 id="modele">4. Le modèle</h2>
+<h3>4.1 Notations (tous les termes)</h3>
+<div class="tw"><table>
+<thead><tr><th>Symbole</th><th>Signification</th><th>Unité</th></tr></thead><tbody>
+<tr><td>x, y, z</td><td>Repère du corps : origine au centre du châssis, x vers l'avant, y vers la gauche, z vers le haut</td><td>mm</td></tr>
+<tr><td>L₁, L₂, L₃</td><td>Coxa (axe C1 → axe C2), fémur (C2 → genou C3), tibia (genou → pied)</td><td>mm</td></tr>
+<tr><td>α</td><td>Élévation du fémur au-dessus de l'horizontale (α > 0 : genou haut, architecture 2). Lien avec l'étude de l'équipe : θ₂ = 90° − α</td><td>deg</td></tr>
+<tr><td>β</td><td>Inclinaison du tibia sous l'horizontale. θ₃ = α + β (rotation relative au genou)</td><td>deg</td></tr>
+<tr><td>ξ</td><td>Orientation de la patte vue de dessus : 0° = perpendiculaire au châssis, 90° = dans l'axe avant/arrière. Lien avec l'étude : θ₁ = ±(90° ∓ ξ) selon la patte</td><td>deg</td></tr>
+<tr><td>D</td><td>Distance horizontale axe C2 → pied, dans le plan de la patte</td><td>mm</td></tr>
+<tr><td>H₂</td><td>Hauteur de l'axe C2 au-dessus du pied</td><td>mm</td></tr>
+<tr><td>e, h</td><td>e : hauteur de l'axe C2 au-dessus du dessous du châssis ; h = H₂ − e : garde au sol</td><td>mm</td></tr>
+<tr><td>N_ch, M_ch, c</td><td>Longueur et largeur extérieures du châssis ; c : retrait de l'axe par rapport au bord</td><td>mm</td></tr>
+<tr><td>r</td><td>Distance horizontale axe C1 → pied = L₁ + D</td><td>mm</td></tr>
+<tr><td>R_s</td><td>Course du pied par cycle (le pas)</td><td>mm</td></tr>
+<tr><td>M, g</td><td>Masse totale portée par les pattes ; g = 9,81 m/s²</td><td>kg</td></tr>
+<tr><td>λᵢ</td><td>Part du poids portée par le pied i (coordonnée barycentrique du CdG)</td><td>—</td></tr>
+<tr><td>Rᵢ</td><td>Réaction verticale du sol sur le pied i = M g λᵢ</td><td>N</td></tr>
+<tr><td>τ₁, τ₂, τ₃</td><td>Couples requis en C1, C2, C3</td><td>N·m</td></tr>
+<tr><td>C_cont, SF</td><td>Couple continu du servo ; coefficient de sécurité</td><td>N·m ; —</td></tr>
+<tr><td>u</td><td>Taux d'utilisation du couple = τ / C_cont (doit rester ≤ 1/SF)</td><td>—</td></tr>
+<tr><td>SSM</td><td>Marge de stabilité statique : distance horizontale du CdG au bord le plus proche du polygone d'appui</td><td>mm</td></tr>
+<tr><td>NESM</td><td>Marge de stabilité énergétique normalisée : hauteur dont le CdG doit monter pour basculer</td><td>mm</td></tr>
+<tr><td>S1, S2</td><td>Scénarios de CdG : nominal / pire cas</td><td>—</td></tr>
+<tr><td>ε_CdG, ε_legs</td><td>Incertitude sur le CdG (sans CAO) ; borne de l'effet du choix des servos sur le CdG</td><td>mm</td></tr>
+<tr><td>s</td><td>Balancement du corps (déplacement horizontal choisi par la boucle interne)</td><td>mm</td></tr>
+</tbody></table></div>
+
+<h3>4.2 Géométrie d'une patte (architecture 2)</h3>
+<p>Dans le plan vertical de la patte, avec l'origine sur l'axe C2 :</p>
+<div class="eq">genou = ( L₂ cos α ,  +L₂ sin α )
+pied  = ( D , −H₂ )    avec   D = L₂ cos α + L₃ cos β    et   H₂ = L₃ sin β − L₂ sin α</div>
+<p>Cinématique inverse, branche « genou haut ». Elle sert pour toutes les poses autres que le repos :</p>
+<div class="eq">d = √(D² + H₂²)        ψ = arccos[(L₂² + d² − L₃²)/(2 L₂ d)]
+α = ψ − atan2(H₂, D)     β = atan2(H₂ + L₂ sin α , D − L₂ cos α)
+existe  ⇔  |L₂ − L₃| ≤ d ≤ L₂ + L₃   (inégalité triangulaire)</div>
+<p><b>Pourquoi paramétrer par (α, β) plutôt que par (D, H₂).</b> Les deux sont équivalents (une bijection sur la branche genou haut). Mais avec (α, β), toute combinaison est une posture réelle : on ne gaspille aucun calcul sur des points inatteignables, et la posture de repos sort directement du calcul.</p>
+
+<h3>4.3 Montage de la coxa : dedans ou dehors</h3>
+<div class="eq">u = (±sin ξ , ±cos ξ)    direction de la patte (signes selon la patte)
+P₀ = (±(N_ch/2 − c) , ±(M_ch/2 − c))   coin du châssis, en retrait de c
+dehors : C1 = P₀ ;          pied au repos = P₀ + (L₁ + D)·u
+dedans : C1 = P₀ − L₁·u ;   C2 = P₀ ;   pied au repos = P₀ + D·u</div>
+<p>Avec un châssis donné, « dehors » écarte les pieds de L₁ : polygone plus grand, mais empreinte plus grande et servos C1 moins protégés. Le couple C2 ne change pas, car D se mesure depuis C2. En montage « dedans », on vérifie aussi que l'axe C2 ne déborde pas du châssis de plus de <code>overhang_C2</code> quand la patte tourne.</p>
+
+<h3>4.4 Tâches vérifiées et allure témoin</h3>
+<p>Le mouvement final sera <b>appris</b> par apprentissage par renforcement. On ne l'optimise donc pas. On vérifie seulement qu'il <b>existe au moins un</b> mouvement admissible pour chaque tâche (G9). L'allure témoin est un <b>crawl discontinu</b> : le corps ne bouge que lorsque les 4 pieds sont au sol (Gonzalez de Santos 1998). C'est l'allure statiquement stable la plus prudente.</p>
+<p>Ordre de levée : arrière-gauche, avant-gauche, arrière-droite, avant-droite. Chaque patte avance de R_s en l'air, et le corps avance de R_s/4 avant chaque levée. En régime établi, juste avant la levée de la patte k, les pieds sont décalés le long de x de :</p>
+<div class="eq">patte k : −R_s/2      k−1 : +R_s/4      k−2 : 0      k−3 : −R_s/4</div>
+<p>On obtient 14 phases et 39 états. Tous les états d'une même phase partagent la même position du corps :</p>
+<div class="tw"><table><thead><tr><th>Phases</th><th>États dans chaque phase</th><th>Pourquoi</th></tr></thead><tbody>
+<tr><td>avant × 4</td><td>pré-levée (4 pieds), vol (3 pieds, patte à l'apex), post-pose (4 pieds)</td><td>marche avant</td></tr>
+<tr><td>arrière × 4</td><td>idem, en miroir avant/arrière</td><td>marche arrière exigée</td></tr>
+<tr><td>obstacle × 4</td><td>idem, avec les pieds avant posés sur l'obstacle (z = 30 mm) ; NESM calculé en 3D</td><td>franchissement de 30 mm</td></tr>
+<tr><td>rotation × 1</td><td>4 pieds, corps tourné de ±lacet/2</td><td>rotation sur place exigée</td></tr>
+<tr><td>saisie × 1</td><td>4 pieds au repos, bras tendu avec l'objet</td><td>manipulation</td></tr>
+</tbody></table></div>
+<p>L'apex de la patte en vol est à 30 + Δh mm du sol. Δh = 20 mm est la marge utilisée par Zamani 2018 pour les marches.</p>
+
+<h3>4.5 Masses et CdG : scénarios S1 et S2</h3>
+<p>Le CdG global est la moyenne des positions de toutes les pièces, pondérée par leurs masses : châssis, batterie, bras, objet, et pour chaque patte les 3 servos, les 3 segments en aluminium, les équerres et le pied. La position de chaque pièce de patte est calculée par la cinématique de chaque état. Le CdG bouge donc réellement quand une patte se lève (effet signalé par Gonzalez de Santos 1998).</p>
+<div class="eq">G = ( m_corps·G_corps + Σ_pièces mᵢ·pᵢ ) / M</div>
+<ul>
+<li><b>S1 (nominal)</b> : batterie à sa position nominale, bras en posture « transport » (avec l'objet) pendant la marche, « tendu » pendant la saisie.</li>
+<li><b>S2 (pire cas)</b> : le CdG du corps peut être n'importe où dans une <b>boîte</b>. Elle couvre toutes les postures du bras autorisées (marche : replié ou transport ; saisie : toutes) et toute la zone possible de la batterie, élargie de ε_CdG (incertitude sans CAO). Le CdG est affine en la position de la batterie : les extrêmes de la boîte sont atteints aux coins de sa zone. Le programme cherche le pire point de la boîte, et ce calcul est <b>exact</b> (§8, D6).</li>
+<li>Dans les deux scénarios, on ajoute la borne <b>ε_legs</b> : le CdG des pattes est calculé avec le servo de référence, et l'écart dû à un autre choix de servo est majoré par Σ |Δm|·|ΣP − 4G| / M_min (§8, D11).</li>
+</ul>
+
+<h3>4.6 Réactions et couples</h3>
+<p><b>Trois pieds au sol.</b> L'équilibre vertical (forces et moments) donne exactement :</p>
+<div class="eq">Σ Rᵢ = M g       Σ Rᵢ·pᵢ = M g·G      ⇒      Rᵢ = M g·λᵢ(G)</div>
+<p>où λᵢ sont les coordonnées barycentriques du CdG dans le triangle d'appui (D1).</p>
+<p><b>Quatre pieds au sol (hyperstatique).</b> La répartition n'est pas unique. On prend le maximum exact sur toutes les répartitions possibles : il est atteint sur une solution à 3 pieds (D12).</p>
+<p><b>Couples.</b> La réaction est verticale au pied ; le moment autour d'un axe horizontal vaut force × distance horizontale :</p>
+<div class="eq">τ₂ = Rᵢ·D        (axe C2 → pied)
+τ₃ = Rᵢ·L₃|cos β|   (genou → pied)
+τ₁ = Rᵢ·(a/g)·r     (effort horizontal d'accélération a, direction la plus défavorable)
+patte en vol : τ₂ = g·Σ m_pièce·(bras de levier)  ,  τ₃ idem autour du genou</div>
+<p>Le poids des segments en appui réduit τ₂ (il agit en sens inverse de la réaction). On le néglige, ce qui est <b>prudent</b>. L₁ n'apparaît ni dans τ₂ ni dans τ₃ : d'où <b>L₁ = L₁,min</b>.</p>
+
+<h3>4.7 Stabilité</h3>
+<div class="eq">SSM  = min sur les arêtes de la distance horizontale du CdG à l'arête     (McGhee &amp; Frank 1968)
+NESM = min sur les arêtes de [ √(d² + z_G²) − z_G ]   (sol plat)    ≈ d²/(2 z_G)   si d ≪ z_G
+SSM corrigée = SSM − z_G·a/g − ε_pied   (accélérations, erreur de position du pied)</div>
+<p>La NESM est la hauteur de la barrière d'énergie à franchir pour basculer (Hirose 2012 ; ESM de Messuri &amp; Klein). Contrairement à la SSM, elle voit la hauteur du CdG. C'est indispensable ici, puisque h est une variable : avec la SSM seule, l'optimiseur pourrait monter le corps sans en payer le prix. Pieds sur l'obstacle : NESM 3D de Hirose (rotation du CdG autour de chaque arête inclinée), évaluée aux 8 coins de la boîte du CdG. Correction z_G·a/g : sous accélération, le point d'appui équivalent se décale de z_G·a/g (D5).</p>
+
+<h3>4.8 Boucle interne : position du corps à chaque phase</h3>
+<p>Pour chaque phase, le corps peut se décaler (balancement) sur une grille de 11 × 11 positions, dans ±60 mm. Avec les pieds fixes, c'est la procédure de Hanajima 2016. Une position est <b>admissible</b> si, dans tous les états de la phase, les 4 conditions suivantes sont vraies :</p>
+<ul>
+<li>toutes les poses sont atteignables (portée, singularité, collisions) ;</li>
+<li>les couples tiennent avec les servos choisis ;</li>
+<li>NESM ≥ NESM_min ;</li>
+<li>SSM corrigée ≥ 0.</li>
+</ul>
+<p>Parmi les positions admissibles, on prend celle qui <b>maximise le NESM</b> : la commande place le corps pour être le plus stable possible dans les limites de couple. f₂ est donc « la meilleure stabilité garantie compte tenu des servos ». Le programme indique aussi le <b>couple minimal</b> nécessaire si l'on accepte juste NESM = NESM_min (colonne <code>tau_min_*</code>).</p>
+
+<h2 id="objectifs">5. Fonctions objectifs</h2>
+<div class="tw"><table><thead><tr><th>#</th><th>Objectif</th><th>Formule</th><th>Pourquoi</th></tr></thead><tbody>
+<tr><td>f₁</td><td>Masse des 4 pattes (à minimiser)</td><td><code>4·[m_servo(C1) + m_servo(C2) + m_servo(C3) + ρ_lin·(L₁+L₂+L₃) + 3 m_équerre + m_pied]</code></td><td>Elle agit sur M, donc sur R, donc sur les couples (boucle masse → couple), et sur l'autonomie de 30 min. Elle varie surtout par le choix des servos, ce qui en fait un objectif utile (Fadini 2024 choisit aussi ses moteurs dans une liste).</td></tr>
+<tr><td>f₂</td><td>NESM minimal sur toutes les phases (à maximiser)</td><td><code>min sur les phases de max sur les positions admissibles du corps de NESM(phase, position)</code>, en S1 ou S2</td><td>Mesure de stabilité qui voit la hauteur du CdG (Hirose 2012), et prudente : on prend la pire phase et, en S2, le pire CdG.</td></tr>
+<tr><td>f₃</td><td>Taux d'utilisation du couple</td><td><code>u = max τ/C_cont</code></td><td><b>Mis en contrainte</b> (u ≤ 1/SF), pas en objectif. C'est la réserve pour les erreurs du modèle (Ha 2017 : corrélation de 0,7 entre couple prédit et courant mesuré), pour la politique apprise, plus brutale (Bjelonic 2023), et pour l'échauffement (∝ τ², Seok 2015).</td></tr>
+</tbody></table></div>
+<p><b>Pourquoi ces objectifs s'opposent.</b>
+<ul>
+<li><b>D :</b> un D plus grand donne un polygone plus grand, donc plus de NESM. Mais τ₂ = R·D augmente, ce qui demande un servo plus fort, donc f₁ augmente.</li>
+<li><b>Hauteur :</b> un corps plus bas donne plus de NESM, mais un β plus faible, donc τ₃ = R·L₃ cos β plus grand.</li>
+<li><b>ξ :</b> autour de 40 à 45°, la marge maximale est la plus grande, mais D au bout de la course augmente, donc τ₂ aussi.</li>
+</ul></p>
+
+<h2 id="contraintes">6. Contraintes (toutes normalisées : valeur/limite − 1 ≤ 0)</h2>
+<div class="tw"><table><thead><tr><th>#</th><th>Contrainte</th><th>Formule</th><th>Ce qu'elle garantit</th><th>Source ou raison</th></tr></thead><tbody>
+<tr><td>G1</td><td>Couples</td><td>max sur les poses et le CdG de τⱼ ≤ C_cont,j / SF, pour j = 1, 2, 3 ; patte en vol comprise</td><td>Chaque servo tient sans dépasser son couple continu, avec une réserve.</td><td>Fadini 2024 (couple ≤ couple nominal) ; Pupper et Doggo (le couple continu ne vaut que 31 à 56 % du couple crête)</td></tr>
+<tr><td>G2</td><td>Stabilité</td><td>NESM ≥ NESM_min et SSM − z_G·a/g − ε_pied ≥ 0, dans chaque état</td><td>Le robot ne bascule pas, même sous accélération et avec une erreur de position du pied.</td><td>Hirose 2012, Hanajima 2016, Gonzalez de Santos 1998</td></tr>
+<tr><td>G3</td><td>Portée et singularité</td><td>|L₂−L₃| + m ≤ d ≤ L₂+L₃ − m ; θ₃ ∈ [20°, 160°] ; D > 0</td><td>La patte atteint chaque pose sans être tendue ou repliée à fond (det J = −L₂L₃ sin θ₃ → 0).</td><td>Ha 2017 (l'optimisation dérive vers la singularité) ; D8</td></tr>
+<tr><td>G4</td><td>Butées</td><td>course utilisée (max − min sur toutes les phases) ≤ course du servo − 2 × marge</td><td>Chaque angle reste dans la course. Le zéro du servo est calé au montage, d'où la contrainte sur l'étendue.</td><td>Fadini 2024 ; Raheem &amp; Khaleel 2015</td></tr>
+<tr><td>G5</td><td>Obstacle</td><td>h ≥ 30 + h_marge ; apex à 30 + Δh atteignable ; pieds avant posés sur l'obstacle atteignables</td><td>L'obstacle passe sous le ventre, le pied le franchit, la patte peut se poser dessus.</td><td>Cahier des charges ; Zamani 2018 (Δh) ; décision d'équipe</td></tr>
+<tr><td>G6</td><td>Gabarit au repos</td><td>2·max|x_pied| + ⌀_pied ≤ 400 et 2·max|y_pied| + ⌀_pied ≤ 400</td><td>Le robot tient dans 400 × 400 mm.</td><td>Cahier des charges ; décision d'équipe (au repos)</td></tr>
+<tr><td>G7</td><td>Collisions</td><td>pieds hors du contour du châssis + marge ; distance entre les pattes d'un même côté (vue de dessus) ≥ marge ; axes C1 voisins espacés ≥ encombrement ; débord de C2 (dedans)</td><td>Les pattes ne se touchent pas entre elles ni avec le châssis.</td><td>Fadini 2024 (préprint) ; Raheem &amp; Khaleel 2015</td></tr>
+<tr><td>G8</td><td>Rotation sur place</td><td>poses à ±lacet/2 atteignables, dans les butées, couples tenus</td><td>La rotation sur place est possible.</td><td>Cahier des charges ; Zamani 2018</td></tr>
+<tr><td>G9</td><td>Existence d'un mouvement</td><td>pour chaque phase, il existe une position du corps telle que G1 à G4 et G7 sont satisfaites dans tous ses états</td><td>Il existe au moins une façon de faire chaque tâche. La politique apprise ne peut utiliser que ce que la mécanique permet.</td><td>Ha 2017, Fadini 2024 (idée bi-niveau), Hanajima 2016</td></tr>
+<tr><td>G10</td><td>Budget de masse</td><td>m_châssis + m_batterie + 4·m_patte ≤ 4 kg (sans bras) ; châssis ≤ 400 mm</td><td>Le cahier des charges est respecté.</td><td>Cahier des charges</td></tr>
+</tbody></table></div>
+<p class="muted">Négligées pour le dimensionnement (justification au §10) : vitesse (plafond), vitesse articulaire, bande passante, inertie de patte, résistance des segments (12 à 31 MPa sous 2,35 N·m), frottement (μ requis ≈ a/g ≈ 0,05), câbles à travers C1, stabilité de la pince, espace de travail du bras (le bras ne pivote pas).</p>
+
+<h2 id="demarche">7. Démarche pas à pas</h2>
+<div class="tw"><table><thead><tr><th>Étape</th><th>Ce qu'on fait</th><th>Pourquoi</th></tr></thead><tbody>
+<tr><td>1. Entrées</td><td>Fichier <code>config.yaml</code> : châssis, masses, CdG, servos, marges, tâches.</td><td>Une seule source de données, versionnée.</td></tr>
+<tr><td>2. Modèle vérifié</td><td>13 tests automatiques (§8), dont une vérification croisée avec un calcul naïf indépendant.</td><td>Un optimiseur exploite toutes les erreurs du modèle.</td></tr>
+<tr><td>3. Pré-filtre</td><td>Contraintes de la posture de repos : garde au sol, θ₃, gabarit, axes C1.</td><td>Élimine environ 75 % des candidats en quelques millisecondes.</td></tr>
+<tr><td>4. Exploration</td><td>Sobol (8192 points) sur (L₂, L₃, α, β, ξ) ; 39 états × 121 positions du corps × 4 pattes par candidat.</td><td>Couvre l'espace sans biais de grille.</td></tr>
+<tr><td>5. Choix exact des servos</td><td>Le couple requis vaut M_c·g·k(géométrie) : on calcule k une fois, puis on teste toutes les combinaisons du catalogue (4³ = 64).</td><td>La variable discrète est résolue exactement, sans algorithme génétique (D9).</td></tr>
+<tr><td>6. Pareto + raffinement</td><td>Tri de non-dominance sur (f₁, f₂), puis 2 passes de ré-échantillonnage autour du front.</td><td>Front précis là où il compte.</td></tr>
+<tr><td>7. Robustesse</td><td>Les 6 premières couches de non-dominance (≤ 60 candidats) sont testées par 100 tirages de Monte-Carlo : masses ±10 %, couple −10 %, CdG ±10 mm, longueurs ±2 mm, angles ±2°. Un candidat est robuste s'il réussit ≥ 95 % des tirages. Front robuste = Pareto des candidats robustes.</td><td>Les points du 1er front sont collés aux contraintes, donc souvent fragiles (§9) : il faut tester au-delà du front.</td></tr>
+<tr><td>8. Stress « tout au pire »</td><td>Toutes les incertitudes au pire en même temps (couple −10 %, masses +10 %, CdG +10 mm, marges reculées).</td><td>Information : montre si la marge globale suffit.</td></tr>
+<tr><td>9. Décision</td><td>Sur le front robuste : point de coude (distance maximale à la corde du front normalisé) et ε-contrainte (le plus léger avec NESM ≥ 2 mm).</td><td>Règle explicite et défendable. Zhang 2017 pondère par AHP + entropie, ce qui reste subjectif.</td></tr>
+<tr><td>10. Sensibilité</td><td>Un facteur à la fois : couple du servo de l'équipe, masse du châssis, course, coefficient de sécurité, incertitude sur le CdG, NESM_min.</td><td>Dit quelles données il faut obtenir en priorité.</td></tr>
+<tr><td>11 à 13 (hors programme)</td><td>MuJoCo sur les finalistes ; politique apprise ; banc d'essai sur une patte (couple ↔ courant) puis recalage.</td><td>Le modèle est statique : validation dynamique et expérimentale.</td></tr>
+</tbody></table></div>
+
+<h2 id="demos">8. Démonstrations et validation</h2>
+<p><b>D1 — Réactions à 3 pieds.</b> Les 3 inconnues Rᵢ satisfont 3 équations linéaires indépendantes (forces verticales, moments selon x et y). La solution est unique : Rᵢ = M g λᵢ. λᵢ est affine en G.</p>
+<p><b>D3 — Contact unilatéral ⇔ CdG dans le polygone.</b> On a Rᵢ ≥ 0 et Σλᵢ = 1, donc G = Σλᵢpᵢ est une combinaison convexe des pieds.</p>
+<p><b>D4 — NESM sur sol plat.</b> En basculant autour de l'arête, le CdG décrit un cercle de rayon ρ = √(d² + z_G²). Au sommet, il est à la hauteur ρ. Il doit donc monter de ρ − z_G. Développement limité : ≈ d²/(2z_G). Exemple : d = 60 et z_G = 80 donnent 20 mm (vérifié par un test).</p>
+<p><b>D5 — Accélérations.</b> Dans le repère du corps, on ajoute la force d'inertie −M·a en G. L'équilibre des moments donne x_appui = x_G − z_G·a/g.</p>
+<p><b>D6 — Le pire CdG est à un coin de la boîte.</b> Les couples τ = M g λᵢ·(bras de levier) et les distances aux arêtes sont affines en G. Une fonction affine atteint son maximum sur une boîte à un sommet, et on le calcule exactement par la fonction d'appui f(c) ± |∇f|·h. Le NESM d'une arête est croissant en d et décroissant en z : son pire cas est aussi à un coin. Vérification numérique : 300 boîtes × 400 points intérieurs, aucun point intérieur pire qu'un coin.</p>
+<p><b>D7 — Le pire D est à une extrémité de course.</b> La fonction t ↦ ‖p₀ + t·u‖ est convexe, donc son maximum sur un segment est à une extrémité.</p>
+<p><b>D8 — Singularité.</b> Avec q = (α, θ₃) : det J = −L₂·L₃·sin θ₃. Il s'annule jambe tendue ou repliée (vérifié par différences finies).</p>
+<p><b>D9 — Servos découplés.</b> τⱼ = M_c·g·kⱼ, et kⱼ ne dépend que de la géométrie et de la position du corps. La masse M_c (qui dépend des servos) multiplie seulement. On teste donc les 64 combinaisons sur des tableaux déjà calculés.</p>
+<p><b>D10 — Orientation optimale pour la stabilité.</b> Le triangle d'appui est rectangle de côtés X = N + 2r sin ξ et Y = M + 2r cos ξ. Son rayon inscrit (la marge maximale possible) vaut (X + Y − H)/2, avec H = √(X² + Y²). La dérivée s'annule pour <b>tan ξ* = (H − X)/(H − Y)</b>, soit 45° exactement si l'empreinte de base est carrée, moins sinon.</p>
+<p><b>D11 — Borne ε_legs.</b> G_c − G_ref = Σ_t Δm_t·(ΣP_t − 4G_ref)/M_c, où ΣP_t est la somme des positions des 4 servos de type t. Donc |G_c − G_ref| ≤ 3·max|Δm|·max|ΣP_t − 4G_ref| / M_min.</p>
+<p><b>D12 — Quatre pieds.</b> Les répartitions admissibles (R ≥ 0, 3 équations, 4 inconnues) forment un segment, intersection d'une droite et de l'orthant positif. Ses extrémités ont un Rᵢ nul : ce sont des solutions à 3 pieds. Le maximum de Rᵢ, qui est linéaire, est donc atteint sur une solution à 3 pieds. Vérifié contre un programme linéaire (200 cas).</p>
+<h3>Validation du code</h3>
+<ul>
+<li><b>13 tests automatiques</b> (<code>python -m pytest -q</code>), tous réussis : aller-retour des cinématiques directe et inverse (5000 cas, erreur < 10⁻⁸), jacobien, équilibre des réactions, théorème des coins, valeurs du NESM, NESM 3D = NESM plat sur sol plat, borne à 4 pieds = programme linéaire, convexité de D, distance entre segments, géométrie des deux montages, décalages de l'allure, monotonie (plus de couple ne réduit jamais le nombre de solutions).</li>
+<li><b>Vérification croisée indépendante</b> : pour une phase complète, le coefficient de couple de C2 recalculé à la main (cinématique écrite à nouveau, CdG pièce par pièce, réactions par programme linéaire) donne <b>la même valeur à 10⁻⁶ près</b> que l'évaluateur vectorisé.</li>
+</ul>
+
+<h2 id="resultats">9. Résultats (avec les entrées hypothétiques)</h2>
+<div class="note">Rappel : masses, CdG, châssis et 3 servos du catalogue sont <b>fictifs</b>. Lisez ces résultats comme une démonstration de la méthode et une indication des mécanismes qui dominent, pas comme les dimensions à fabriquer.</div>
+<h3>9.1 Combien de candidats survivent à chaque étape</h3>
+{{TABLE_STATS}}
+{{FIG_ENTONNOIR}}
+{{FIG_REJETS}}
+<h3>9.2 Fronts de Pareto et choix</h3>
+{{FIG_FRONTS}}
+<h3>9.3 Designs recommandés (front robuste)</h3>
+{{TABLE_CHOIX}}
+{{DESSINS}}
+<h3>9.4 Robustesse du front nominal</h3>
+<p>Les points du front nominal sont presque toujours collés à une contrainte (garde au sol, couple, NESM_min). Sous des perturbations réalistes, ils échouent souvent :</p>
+{{FRONT_ROBUST}}
+<p>C'est pour cela que la décision se fait sur le <b>front robuste</b>, et pas sur le front nominal.</p>
+<h3>9.5 Servos retenus</h3>
+{{FIG_SERVOS}}
+<h3>9.6 Sensibilité</h3>
+{{TABLE_SENS}}
+{{FIG_SENS}}
+
+<h2 id="critique">10. Analyse critique et limites</h2>
+{{CRITIQUE}}
+
+<h2 id="suite">11. Prochaines étapes</h2>
+<ol>
+<li><b>Fiche du servo de l'équipe</b> : couple <b>continu</b> (pas le couple de blocage), masse, course, vitesse. C'est l'entrée la plus sensible.</li>
+<li><b>Catalogue réel</b> de servos achetables, pour remplacer les exemples fictifs.</li>
+<li><b>CAO</b> (même grossière) : masses et CdG du châssis, de la batterie et du bras, ce qui réduit la boîte S2 ; L₁,min ; e ; c ; encombrement des servos C1.</li>
+<li>Relancer <code>python run_all.py</code>, puis <code>make_figures.py</code> et <code>build_report.py</code>.</li>
+<li>Simuler les 3 à 5 finalistes dans MuJoCo (posture, crawl, obstacle, rotation, saisie), puis entraîner une politique sur ces modèles.</li>
+<li>Banc d'essai sur une patte : mesurer le courant ↔ couple et recaler le modèle (Ha 2017).</li>
+</ol>
+
+<h2 id="sources">12. Sources</h2>
+<ul>
+<li>Cahier des charges Gr2 (encadrant) ; étude cinématique de l'équipe.</li>
+<li>Ha, Coros, Alspach, Kim, Yamane 2017, RSS XIII : <a href="https://www.roboticsproceedings.org/rss13/p03.pdf">roboticsproceedings.org/rss13/p03.pdf</a></li>
+<li>Fadini et al. 2024, <i>Robotica</i> : <a href="https://gepettoweb.laas.fr/articles/fadini2023.html">gepettoweb.laas.fr/articles/fadini2023.html</a> ; préprint : <a href="https://arxiv.org/pdf/2103.04660">arxiv.org/pdf/2103.04660</a></li>
+<li>Zhang et al. 2017, <i>Mechanika</i> : <a href="https://mechanika.ktu.lt/index.php/Mech/article/view/19854">mechanika.ktu.lt/…/19854</a></li>
+<li>Gülhan (thèse liée à Gülhan &amp; Erbatur 2018) : <a href="https://research.sabanciuniv.edu/36627/1/10209712_MehmetMertGulhan.pdf">research.sabanciuniv.edu/…/MehmetMertGulhan.pdf</a></li>
+<li>Bjelonic et al. 2023 : <a href="https://arxiv.org/abs/2301.03509">arxiv.org/abs/2301.03509</a></li>
+<li>Seok et al. 2015, <i>IEEE/ASME TMECH</i> : <a href="https://dspace.mit.edu/handle/1721.1/108096">dspace.mit.edu/handle/1721.1/108096</a></li>
+<li>Hirose, Lazarenko, Endo 2012 (NESM, DNESM) : <a href="https://t2r2.star.titech.ac.jp/rrws/file/CTT100645736/ATD100000413/">t2r2.star.titech.ac.jp/…</a></li>
+<li>Hanajima et al. 2016 (NESM sur pente, grille de positions du corps) : <a href="https://ep.liu.se/ecp/142/152/ecp17142152.pdf">ep.liu.se/ecp/142/152/ecp17142152.pdf</a></li>
+<li>Gonzalez de Santos, Jimenez, Armada 1998 (effets dynamiques, allures discontinues) : <a href="https://link.springer.com/article/10.1023/A:1007993923530">link.springer.com/…/A:1007993923530</a></li>
+<li>Parasuraman et al. 2012 (SSM d'un petit robot à 4 pattes) : <a href="https://journals.sagepub.com/doi/10.5772/53623">journals.sagepub.com/doi/10.5772/53623</a></li>
+<li>Raheem &amp; Flayyih 2018 (crawl, d = 2·Aire/L) : <a href="https://alkej.uobaghdad.edu.iq/index.php/alkej/article/view/393">alkej.uobaghdad.edu.iq/…/393</a></li>
+<li>Raheem &amp; Khaleel 2015 (butées, coxa ±45°) : <a href="https://alkej.uobaghdad.edu.iq/index.php/alkej/article/view/264">alkej.uobaghdad.edu.iq/…/264</a></li>
+<li>Zamani, Khorram, Moosavian 2018 (escaliers, Δh) : <a href="https://arxiv.org/abs/1809.02891">arxiv.org/abs/1809.02891</a></li>
+<li>Stanford Pupper 2021 : <a href="https://arxiv.org/abs/2110.00736">arxiv.org/abs/2110.00736</a> ; Stanford Doggo 2019 : <a href="https://arxiv.org/abs/1905.04254">arxiv.org/abs/1905.04254</a></li>
+<li>Chen et al. 2024 (co-conception par apprentissage) : <a href="https://arxiv.org/abs/2407.06770">arxiv.org/abs/2407.06770</a> ; Luck et al. 2019 : <a href="https://arxiv.org/abs/1911.06832">arxiv.org/abs/1911.06832</a></li>
+<li>McGhee &amp; Frank 1968 et Messuri &amp; Klein 1985 : cités par Parasuraman 2012 et Hirose 2012 (non relus directement).</li>
+</ul>
+
+<h2 id="annexeA">Annexe A. Entrées utilisées pour ce rapport</h2>
+{{TABLE_CONFIG}}
+
+<h2 id="annexeB">Annexe B. Utiliser le programme</h2>
+<div class="eq">pip install numpy scipy pandas matplotlib pyyaml pytest
+python -m pytest -q            # 13 tests
+python run_all.py              # 4 cas + sensibilite (~30 min sur 2 coeurs)
+python run_all.py --quick      # version rapide (~5 min)
+python run_all.py --only dedans_S2
+python make_figures.py && python build_report.py</div>
+<p>Arborescence : <code>gr2/params.py</code> (entrées), <code>kinematics.py</code>, <code>statics.py</code> (réactions, marges), <code>gait.py</code> (tâches et allure), <code>evaluate.py</code> (évaluation et choix des servos), <code>explore.py</code> (Sobol, Pareto, raffinement, robustesse, décision) ; <code>results/&lt;cas&gt;/</code> contient <code>admissibles.csv</code>, <code>pareto.csv</code>, <code>pareto_robuste.csv</code>, <code>candidats_robustesse.csv</code> et <code>resume.json</code>.</p>
+</main>
+</div>

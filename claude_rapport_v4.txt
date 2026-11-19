@@ -1,0 +1,948 @@
+ξ = 45° : stabilité, couples et choix des
+servos
+Analyse rigoureuse du modèle de pattes Gr2 · optimisation complète relancée (ξ libre, ξ = 45°,
+variantes de moteurs) · raisonnement physique et mathématique
+
+    Réponses en bref.
+         1. Le S3306 en C2 : oui, obligatoire. Quel que soit ξ, le couple minimal requis en C2 vaut 0,974
+            N·m sur tous les designs admissibles, alors que le S-U400 n'offre que 0,58 N·m utilisables. Le
+            S3306 est le moteur à 2,354 N·m du catalogue. Pour le genou (C3), tout dépend de ξ : le S-
+            U400 suffit vers ξ ≈ 77° (0,54 N·m requis, limite 0,58), il ne suffit pas à 45° (0,97 N·m requis).
+            Avec d'autres moteurs (§5) le résultat change nettement : en supposant 4 MX-64AT (6,0 N·m)
+            en C2, on atteint un NESM de plus de 12 mm même à 45° ; la limite principale est donc le
+            couple du S3306, pas la géométrie à 45°.
+         2. « Même R, même X, alors pourquoi 0,97 contre 0,54 ? » Au repos les couples sont en effet
+            identiques entre 45° et 77°. Mais l'optimiseur ne calcule pas les couples au repos : il les
+            calcule pendant les phases de marche, où la réaction du sol sur un pied vaut Ri = M gλi (part
+                                                                                              ​           ​
+
+
+
+
+            de poids λ imposée par la position du CdG, pas M g/4) et où le bras de levier X dépend de la
+            pose de la patte après le décalage du corps. Le §2 refait le calcul à la main et retrouve 0,850
+            et 0,562 N·m (phase avant_RL) au millième près.
+         3. La masse des moteurs est prise en compte, à trois endroits : dans la masse portée Mc (donc​
+
+
+
+
+            dans toutes les réactions), dans le CdG des pattes, et dans le couple de la patte en vol (servo
+            du genou). Détail au §1.7.
+         4. La marge de stabilité baisse parce que le NESM est quadratique en la distance au bord du
+            polygone d'appui (≈ d2 /2z avec z ≈ 86 mm) : 10,5 mm de distance donnent seulement 0,64
+            mm de NESM. À 45° les pattes ne peuvent pas décaler le corps aussi loin qu'à 77° (§3).
+         5. Optimisation complète. Avec le catalogue réellement disponible (S3306 / S-U400 / SG90),
+            tous les 60 points du front de Pareto à ξ = 45° sont dominés par un point du front à ξ libre ;
+            aucun point du front libre n'est dominé (§4). Le meilleur compromis à 45° pèse 1,392 kg de
+            pattes contre 1,041 kg, avec un NESM de 1,29 mm contre 4,10 mm.
+         6. Limite à connaître : la grille de balancement (pas de 12 mm) rend les chiffres à 45°
+            pessimistes. Avec un pas de 3 mm, le NESM à 45° passe de 0,64 à 1,47 mm et le couple C3
+            de 0,97 à 0,78 N·m. Les conclusions tiennent (§3.5), les valeurs exactes non.
+
+
+
+1. Ce que calcule le programme, équation par équation
+Le programme n'est pas un apprentissage : c'est un contrôle quasi-statique. Pour un design x =
+(L2 , L3 , α, β, ξ), un choix de servos et un scénario de CdG, il vérifie que 14 phases du cahier des
+     ​      ​
+
+
+
+
+charges sont réalisables et mesure trois objectifs. Tout est en mm, kg, N·m, degrés ; le repère corps a
+son origine au centre du châssis, x vers l'avant, y vers la gauche.
+
+
+
+
+Gr2 — ξ = 45° : stabilité, couples et choix des servos                                                           1
+1.1 Géométrie au repos
+                               D0 = L2 cos α + L3 cos β,
+                                      ​       ​                  ​                   H = L3 sin β − L2 sin α,
+                                                                                               ​                   ​              h=H −e
+
+D0 est la portée horizontale de l'axe C2 au pied, H la hauteur de C2 au-dessus du sol, h la garde au
+        ​
+
+
+
+
+sol (châssis à e = 15 mm sous C2). Pour la patte avant-gauche en montage « dedans », l'axe C2 est
+en P0 = (N /2 − c, M /2 − c) = (85, 85) mm, la direction de la patte est u = (sin ξ, cos ξ), et
+            ​
+
+
+
+
+                                                         pied = P0 + D0 u,       ​   ​
+                                                                                                   C1 = P0 − L1 u.
+                                                                                                     ​         ​       ​
+
+
+
+
+Les trois autres pattes s'obtiennent par symétrie de signes. Au repos, les quatre pieds forment donc
+un rectangle de demi-côtés a = 85 + D0 sin ξ et b = 85 + D0 cos ξ . Pour le design étudié (L2 = 60,08,
+                                                                             ​                            ​                                      ​
+
+
+
+
+L3 = 71,92, α = 10,55°, β = 99,76°) : D0 = 46,9 mm, H = 59,9 mm, h = 44,9 mm. Avec ξ = 45°, a = b =
+    ​                                                                    ​
+
+
+
+
+118,1 mm ; avec ξ = 77,3°, a = 130,7 et b = 95,3 mm. Le produit ab est maximal à 45° (sin ξ + cos ξ et
+sin ξ cos ξ y sont maximaux) : c'est l'argument de l'équipe, et il est exact pour l'aire du polygone.
+
+1.2 Les 14 phases
+L'allure de référence est un crawl discontinu (le corps ne bouge que lorsque les 4 pieds sont au sol).
+Ce n'est pas l'allure finale (apprise par RL) : c'est un témoin d'existence. Ordre de levée RL, FL, RR, FR
+; course du pied Rs = 40 mm. Juste avant la levée de la patte k, les décalages des quatre pieds le long
+                                  ​
+
+
+
+
+de x sont −Rs /2, +Rs /4, 0, −Rs /4 pour k, la patte précédente, celle d'avant et la suivante. Pour
+                         ​                ​              ​
+
+
+
+
+ avant_RL : RL −20 mm, FR +10, RR 0, FL −10.
+
+  Phases                                      Nombre Patte levée / configuration                                           Rôle
+  avant_RL / FL / RR / FR                     4              RL, FL, RR, FR                                                marche avant, pieds au sol plat
+  arriere_FR / RR / FL / RL                   4              miroir avant↔arrière                                          marche arrière (cahier des
+                                                                                                                           charges)
+  obstacle_RL / FL / RR /                     4              pieds avant sur l'obstacle (z = 30                            franchissement
+  FR                                                         mm)
+  rotation                                    1              4 pieds, lacet ± yaw/2                                        rotation sur place
+  saisie                                      1              4 pieds, bras tendu avec objet                                manipulation
+
+  Patte qui se lève k                                                                    k               précédente               d'avant       suivante
+  décalage du pied le long de x (mm)                                                     −20             +10                      0             −10
+
+Chaque phase regroupe des états qui partagent la même position du corps (le balancement). Pour
+ avant_RL : l'état « pré-levée » (4 pieds), l'état « vol » (3 pieds, la patte RL passe à l'apex à 50 mm =
+obstacle 30 + levée 20) et l'état « post-pose » (4 pieds, RL à +20 mm). La position du corps doit donc
+convenir aux trois états à la fois.
+
+1.3 Balancement et cinématique inverse
+Le corps peut se décaler de s = (sx , sy ) sur une grille de 11 × 11 points entre −60 et +60 mm (pas de
+                                                             ​       ​
+
+
+
+
+12 mm), soit 121 positions. Pour chaque position, le pied reste fixe au sol : sa position relative au corps
+vaut pied + dˊecalage − s (puis rotation de −lacet pour la phase de rotation). La cinématique inverse de
+
+
+Gr2 — ξ = 45° : stabilité, couples et choix des servos                                                                                                       2
+chaque patte, branche « genou haut », avec D = rh − L1 (rh = distance horizontale de C1 au pied) et                ​           ​      ​
+
+
+
+
+Hz = H − zpied :
+    ​                    ​
+
+
+
+
+                                                        L22 + d2 − L23
+d=         D2 + Hz2 ,              ψ = arccos                          ,                          α = ψ − atan2(Hz , D),                           β = atan2(Hz + L2 sin α, D − L2 c
+                                                             ​                            ​
+
+
+
+
+                                                             2L2 d
+                             ​ ​                                                              ​                                           ​                              ​      ​         ​
+
+
+
+
+                                                                          ​
+
+
+
+
+avec θ1 le lacet de la coxa, θ2 = α et θ3 = α + β . Une position est géométriquement valide si, pour
+            ​                                       ​                             ​
+
+
+
+
+chaque patte de l'état : ∣L2 − L3 ∣ + 5 ≤ d ≤ L2 + L3 − 5 (marge de portée), D > 0 (le pied reste devant
+                                               ​                 ​                                    ​        ​
+
+
+
+
+l'axe C2), 20° ≤ θ3 ≤ 160°, le pied est à plus de 10 mm du contour du châssis en x ou en y, l'axe C2
+                                   ​
+
+
+
+
+déborde de 10 mm au plus du châssis, et les pattes d'un même côté sont à plus de 30 mm l'une de
+l'autre.
+
+1.4 Centre de gravité
+                                                                        m G +∑ m p
+Pour un état et un décalage : G = b b          i i i
+                                                     avec M = mb + 4 mleg . Les mi pi des pattes
+                                                                              ​       ​           ​       ​
+
+
+
+
+                                                                                                                                              ​          ​       ​   ​
+
+
+
+
+                                           M
+viennent de leurs pièces placées dans la pose calculée : chaque servo est une masse ponctuelle sur
+son axe (C1 sur C1, C2 sur C2, C3 au genou), les segments sont uniformes (0,162 kg/m), plus 15 g
+d'équerre par articulation et 10 g de pied. En mode exact (celui de l'optimisation complète) ce sont les
+masses des servos réellement choisis. La hauteur de Gb est comptée depuis le dessous du châssis,                           ​
+
+
+
+
+donc à h + zrel du sol.  ​
+
+
+
+
+1.5 Le CdG « pire cas » (scénario S2)
+Le CdG du corps (châssis 1,5 kg + batterie 0,54 kg + bras 0,40 kg + objet 0,10 kg) dépend de deux
+choses mal connues : la position de la batterie (zone x ∈ [−80, 40], y ∈ [−30, 30], z ∈ [10, 25] mm) et la
+posture du bras. Les trois postures : replié (φ = (100°, 160°), sans objet), transport ((90°, −90°), objet
+tenu) et tendu ((0°, 0°), objet tenu). En marche S2 retient {replié, transport} ; pour la saisie {replié,
+transport, tendu}. Le CdG étant affine en la position de la batterie, ses extrêmes sont atteints aux 8
+coins de la zone : on calcule donc 8× (nombre de postures) CdG et on prend la boîte qui les contient.
+  Posture du                 Masse                 xG min (mm)
+                                                         ​                                                    xG max (mm)
+                                                                                                                       ​                                yG   ​   zG max (mm) (batterie)
+                                                                                                                                                                     ​
+
+
+
+
+  bras                       corps (kg)            (batterie)                                                 (batterie)                                (mm)
+  replie                     2,44                  -5,7                                                       20,9                                      -6,6 …   32,7
+                                                   (derrière/droite/bas)                                      (devant/droite/bas)                       6,6      (derrière/droite/haut)
+  transport                  2,54                  5,2                                                        30,7                                      -6,4 …   39,0
+                                                   (derrière/droite/bas)                                      (devant/droite/bas)                       6,4      (derrière/droite/haut)
+  tendu                      2,54                  16,3                                                       41,8                                      -6,4 …   28,0
+                                                   (derrière/droite/bas)                                      (devant/droite/bas)                       6,4      (derrière/droite/haut)
+
+  Boîte                                                              Centre (x, y, z) (mm)                                         Demi-largeurs (mm)                    Masse max (kg)
+  marche (replié, transport)                                         (12,5 ; 0,0 ; 34,2)                                           (18,2 ; 6,6 ; 4,8)                    2,54
+  saisie (+ tendu)                                                   (18,0 ; 0,0 ; 31,9)                                           (23,7 ; 6,6 ; 7,1)                    2,54
+
+Le pire cas n'est donc pas une combinaison : c'est une boîte. La combinaison qui pousse le CdG le
+plus vers l'avant est batterie devant + bras en transport en marche (x = 30,7 mm) ou batterie devant
++ bras tendu en saisie (x = 41,8 mm) ; vers l'arrière, batterie derrière + bras replié (x = −5,7 mm) ; le
+
+
+Gr2 — ξ = 45° : stabilité, couples et choix des servos                                                                                                                                    3
+plus haut, batterie en haut + bras en transport (z = 39,0 mm). Le bras monte à la fois la masse (2,54
+kg avec l'objet) et décale le centre de la boîte vers l'avant : xc = +12,5 mm en marche. C'est pourquoi                                                                                                                    ​
+
+
+
+
+les phases où une patte avant se lève sont les plus critiques.
+                                                                                                                                                               m
+La demi-boîte utilisée dans une phase est hxy = hb b + εcdg (avec εcdg = 10 mm d'incertitude sans
+                                                                                                                                                                                   ​
+
+
+
+
+                                                                                                                                       ​                   ​                           ​                               ​                          ​
+
+
+
+
+                                                   M
+CAO). Pour la marche : 18,22 × 2,54/4,38 + 10 = 20,6 mm en x et 6,64 × 0,58 + 10 = 13,9 mm en y, 12,8
+mm en z . Ces 20,6 × 13,9 mm sont ce que l'optimiseur retranche de chaque marge de stabilité.
+
+1.6 Marge de stabilité (SSM, NESM) et réactions du sol
+Pour chaque arête k du polygone d'appui, de normale intérieure unitaire nk et de point Pk , la distance                                                                                                                                                           ​                                       ​
+
+
+
+
+du CdG est dk = nk ⋅ (G − Pk ). Sur la boîte de CdG, le pire coin donne exactement (fonction d'appui
+                                   ​       ​                          ​
+
+
+
+
+d'un rectangle) :
+                                                    dmin
+                                                     k   = dk (Gc ) − ∣nk,x ∣ hx − ∣nk,y ∣ hy ,
+                                                                  ​           ​               ​                            ​               ​                                               ​               ​                           SSM = min dmin
+                                                                                                                                                                                                                                                  k           ​                   ​
+
+
+
+
+                                                                                                                                                                                                                                                          k
+
+
+Le NESM (Hirose) est la hauteur dont il faut soulever le CdG pour basculer autour de l'arête. Sur sol
+plat, avec z la hauteur maximale du CdG :
+                                                                                                                                                                                                                                        d2
+                                                             NESM = min ( (dmin
+                                                                            k ) + z − z) ≈
+                                                                                2  2                                                                                                                                                             (d ≪ z)
+                                                                                                                                                                                                                                        2z
+                                                                                                              ​                                ​                                               ​                                             ​
+
+
+
+
+                                                                                                  k
+
+
+Sur l'obstacle, où les pieds sont à des hauteurs différentes, le NESM est calculé en 3D aux 8 coins de
+la boîte. Pour les réactions : avec 3 pieds, Ri = M gλi où λi sont les coordonnées barycentriques du                               ​                                   ​                                           ​
+
+
+
+
+CdG dans le triangle d'appui ; sur la boîte, la borne supérieure exacte est λmaxi   = λi (Gc ) + ∣∂x λi ∣hx +                                                                                                                                                                 ​               ​   ​               ​   ​   ​
+
+
+
+
+∣∂y λi ∣hy (bornée à [0, 1]). Avec 4 pieds (hyperstatique), la part maximale d'un pied est le maximum sur
+       ​       ​       ​
+
+
+
+
+les quatre triangles qui le contiennent : c'est une borne prudente, qui dépasse largement 1/4.
+
+1.7 Couples, et où entre la masse des moteurs
+La masse portée vaut Mc = mmax body + 4 mleg , avec mbody = 2,54 kg (le cas le plus lourd, objet inclus,
+                                                     max
+                                                         ​                        ​                               ​                                                        ​
+
+
+
+
+utilisé dans toutes les phases : hypothèse conservatrice) et
+                                                   mleg = m1 + m2 + m3 + λl (L1 + L2 + L3 ) + 3mbr + mf oot .
+                                                              ​                   ​                       ​                    ​                   ​           ​                                       ​                       ​                      ​                               ​
+
+
+
+
+Les trois masses de servos m1 , m2 , m3 sont celles du triple choisi : avec trois S3306, mleg = 0,459 kg
+                                                                          ​               ​           ​                                                                                                                                                                                               ​
+
+
+
+
+et Mc = 4,377 kg (donc M g = 42,9 N). Pour chaque patte en appui, de réaction Ri = Mc gλi , les
+                   ​                                                                                                                                                                                                                                                                      ​                   ​
+
+
+
+
+couples demandés sont
+       τ1 = λi Mc a rh,i ,
+           ​               ​   ​       ​           τ2 = Mc g λi Di ,
+                                                     ​                    ​           ​           ​                       τ3 = Mc g λi L3 ∣ cos βi ∣ (×10−3 pour passer des mm aux m).
+                                                                                                                               ​                       ​                       ​                   ​                               ​
+
+
+
+
+τ2 est le moment de Ri autour de l'axe horizontal C2 (bras de levier = Di ), τ3 celui autour du genou
+   ​                                           ​                                                                                                                                                                                                          ​           ​
+
+
+
+
+(bras de levier = distance horizontale genou–pied, nulle quand le tibia est vertical, soit β = 90°), τ1                                                                                                                                                                                                                       ​
+
+
+
+
+celui de la force d'inertie horizontale λi Mc a (a = 0,5 m/s²) autour de l'axe vertical C1. On prend le       ​       ​
+
+
+
+
+maximum sur les pattes en appui et sur les états de la phase. La patte en vol ajoute des couples de
+pesanteur (segments, équerres, pied, et la masse m3 du servo du genou) autour de C2 et C3. Un                                                                      ​
+
+
+
+
+servo est admissible si tous ces couples restent sous Ccont /SF = frac ⋅ Cblocage /1,2, avec frac = 1                                                                                                          ​                                                          ​
+
+
+
+
+(hypothèse optimiste à fixer).
+
+
+
+
+Gr2 — ξ = 45° : stabilité, couples et choix des servos                                                                                                                                                                                                                                                                            4
+La masse des moteurs entre donc : (i) dans Mc , qui multiplie toutes les réactions ; (ii) dans les
+                                                                                  ​
+
+
+
+
+moments qui placent le CdG de chaque patte ; (iii) dans le couple de pesanteur de la patte en vol (m3 )                               ​
+
+
+
+
+; (iv) dans f1 . Le servo C2 posé sur son propre axe ne crée pas de moment sur lui-même.
+                            ​
+
+
+
+
+1.8 Choix de la position et objectifs
+Pour chaque phase p, les positions admissibles sont celles qui vérifient la géométrie, NESM ≥ 0,
+SSM − z a/g − εpied ≥ 0 (εpied = 5 mm) et les couples. On retient celle qui maximise le NESM. Les trois
+                                        ​           ​
+
+
+
+
+objectifs sont :
+             f1 = 4 mleg (min),
+                    ​               ​                   f2 = min max NESMp (s) (max),
+                                                         ​       ​            ​       ​           f3 = max min τ2req (s) (min).
+                                                                                                      ​               ​       ​   ​
+
+
+
+
+                                                             p       s∈adm.                                       p       s
+
+
+Un design est admissible si les 14 phases ont au moins une position admissible, si le pré-filtre passe
+(garde au sol ≥ 40 mm, gabarit 400 mm, θ3 de repos dans [20°, 160°]), si la course de chaque
+                                                                         ​
+
+
+
+
+articulation tient dans la plage du servo moins 10°, et si la masse du robot sans bras ne dépasse pas 4
+kg. L'optimisation complète enchaîne : échantillonnage de Sobol (8 192 points) → pré-filtre →
+évaluation exacte de chaque triple de servos → raffinement local → front de Pareto 3D → 6 couches
+de non-dominance (≤ 60 candidats) → Monte-Carlo (100 tirages : ±10 % masses et couples, ±2 mm,
+±2°, ±10 mm de CdG) → front robuste (≥ 95 % de réussite) → choix du coude (point le plus proche de
+l'idéal, objectifs normalisés) et de l'ε-contrainte.
+
+
+2. Pourquoi 0,97 N·m à 45° et 0,54 N·m à 77° avec le même R et le
+même X au repos
+Au repos, la réaction est la même (M g/4 par pied) et le bras de levier D0 aussi : les couples au repos       ​
+
+
+
+
+sont égaux. Mais le repos n'est pas une phase du calcul. En marche, trois choses changent par
+rapport au repos :
+     Ri = M gλi avec λi jusqu'à 0,65 (borne sur la boîte S2) et non 0,25 ;
+         ​                      ​           ​
+
+
+
+
+     le corps est décalé de s (jusqu'à 60 mm) : chaque pied se déplace, dans le repère de sa patte, de
+     −s ⋅ ui , soit environ ∣s∣ cos(angle entre s et la patte) ;
+                ​
+
+
+
+
+     la patte s'adapte : Di change et le tibia s'incline, donc βi et L3 ∣ cos βi ∣ changent.
+                                                ​                                         ​   ​           ​
+
+
+
+
+À 77° les pattes sont presque parallèles à x ; un décalage latéral (sy = −60) les déplace de      ​
+
+
+
+
+60 cos 77,3° ≈ 13 mm seulement, les tibias restent proches de la verticale (β ≈ 84–93°) et le bras de
+levier au genou reste de 4 à 8 mm. À 45° le même décalage déplace chaque patte d'environ
+60 cos 45° ≈ 42 mm le long de son axe : la patte RR se replie (D = 24,6 mm), son tibia s'incline à β =
+119,5° et le bras de levier au genou monte à 35,4 mm, sous une réaction λ = 0,56 (56 % du poids).
+Reconstruction à la main pour la phase avant_RL, état pré-levée (le plus chargé), servos S3306
+partout (Mc g = 42,94 N) :
+                        ​
+
+
+
+
+Gr2 — ξ = 45° : stabilité, couples et choix des servos                                                                                    5
+  ξ            Patte        λ             D (mm)         β (°)   L3 ∣ cos β∣ (mm)
+                                                                   ​                τ2 = Mc g λD (N·m)
+                                                                                     ​      ​                τ3 = Mc g λL3 ∣ cos β∣ (N·m)
+                                                                                                               ​     ​    ​
+
+
+
+
+  45°          FL           0,343         92,7           62,9    32,7               1,365                    0,482
+  45°          RL           0,343         106,4          49,7    46,5               1,568                    0,686
+  45°          RR           0,559         24,6           119,5   35,4               0,592                    0,850
+  45°          FR           0,617         34,6           110,3   25,0               0,917                    0,662
+  45°          max                                                                  1,568                    0,850
+  77,3°        FL           0,314         63,4           86,4    4,5                0,854                    0,060
+  77,3°        RL           0,314         101,8          54,6    41,7               1,371                    0,562
+  77,3°        RR           0,516         67,1           83,5    8,1                1,487                    0,181
+  77,3°        FR           0,646         54,8           93,3    4,1                1,520                    0,114
+  77,3°        max                                                                  1,520                    0,562
+
+Le programme donne exactement les mêmes nombres : τ = (0,102; 1,568; 0,850) N·m à 45° et
+(0,120; 1,520; 0,562) N·m à 77,3°. Les valeurs 0,97 et 0,54 citées plus tôt sont le maximum sur les 14
+phases du couple minimal sur les positions admissibles (colonne τ3 de tmin ) : la phase la plus chargée
+                                                                                                ​        ​
+
+
+
+
+n'est pas avant_RL mais obstacle_FL / avant_FL.
+
+
+3. Pourquoi la marge de stabilité diminue, et pourquoi 45° n'est pas
+le plus stable en marche
+3.1 L'argument géométrique de l'équipe est vrai, pour l'aire
+Triangle d'appui de la phase avant_RL (pieds FL, FR, RR au repos avec leurs décalages) : aire 29 097
+mm² à 45° contre 25 867 mm² à 77° ; rayon du cercle inscrit (marge maximale théorique pour un CdG
+ponctuel) 71,8 mm contre 66,4 mm. Si le corps pouvait se placer librement et si le CdG était connu,
+45° gagnerait.
+
+3.2 Mais la marge réelle dépend de la place pour balancer le corps
+Le meilleur point du triangle (le centre du cercle inscrit) est à environ 68 mm du centre du châssis à
+45°. L'atteindre demande à la patte FR un D de −13,6 mm (pied derrière son propre axe : impossible).
+Les positions atteignables sont donc un sous-ensemble étroit de la grille. La figure 2 les montre pour
+la phase avant_RL : 19 positions sur 121 à 45°, 23 à 77° ; en dessous de ξ ≈ 28°, 33 positions.
+
+
+
+
+Gr2 — ξ = 45° : stabilité, couples et choix des servos                                                                                      6
+Figure 2 — Positions du corps (décalage en x et y) en phase avant_RL, S2, servos S3306 partout, mêmes L2 , L3 , α, β . À
+                                                                                                              ​   ​
+
+
+
+
+45° (gauche) la zone tenable se réduit à quelques cases au bord de la grille ; à 77,3° elle est plus large et son meilleur
+NESM est plus de deux fois supérieur.
+
+
+
+
+Figure 3 — Polygone d'appui à 3 pieds et boîte du CdG (rouge, 20,6 × 13,9 mm) à la position retenue. À 45° la distance
+minimale du pire coin de la boîte à l'arête la plus proche est de 10,5 mm en phase avant_FL, contre 27,8 mm à 77,3°.
+
+3.3 Le NESM est quadratique : de petites distances donnent de très petites marges
+Pour d ≪ z , NESM ≈ d2 /2z . Phase critique avant_FL (patte avant-gauche en vol), état de vol : à 45°,
+d = 10,5 mm et z ≈ 86 mm donnent NESM = 0,64 mm ; à 77,3°, d = 27,8 mm donne 4,41 mm. Un écart
+de distance de 2,6 fois devient un écart de NESM de près de 7 fois. Les deux phases critiques sont
+celles où une patte avant se lève, parce que le bras décale le CdG vers l'avant (centre de boîte xc =                 ​
+
+
+
+
++12,5 mm).
+
+
+
+
+Gr2 — ξ = 45° : stabilité, couples et choix des servos                                                                    7
+3.4 Ce qui retire de la marge : attribution
+On relâche une hypothèse à la fois, tout le reste égal (S2, servos S3306 partout, mêmes L2 , L3 , α, β ).          ​   ​
+
+
+
+
+f2 est le NESM minimal sur les 14 phases.
+   ​
+
+
+
+
+  Hypothèse relâchée                                     f2 à 45°
+                                                           ​            f2 à 77,3°
+                                                                          ​          NESM avant_RL 45°   NESM avant_RL 77,3°
+                                                         (mm)           (mm)         (mm)                (mm)
+  référence (S2)                                         0,64           4,41         2,26                5,17
+  marge pied/châssis 10→0                                0,64           4,41         2,88                5,17
+  débord C2 illimité                                     0,64           4,41         2,26                5,17
+  distance min pieds 30→0                                0,64           4,41         2,26                5,17
+  marge de portée 5→0                                    1,73           4,41         2,73                5,17
+  θ3 ∈ [0,180]                                           0,64           4,41         2,26                5,17
+  erreur pied 5→0                                        0,64           4,41         2,26                5,17
+  accélération 0.5→0                                     0,64           4,41         2,26                5,17
+  incertitude CdG ±10→0                                  3,93           10,80        7,79                11,12
+  balancement max 60→100                                 0,83           3,15         2,59                5,02
+  (grille 17)
+
+Deux effets dominent : (a) l'incertitude du CdG : la retirer fait passer f2 de 0,6 à 3,9 mm à 45° et de
+                                                                                                 ​
+
+
+
+
+4,4 à 10,8 mm à 77° ; le simple passage du CdG nominal (S1, sans boîte) donne 6,9 mm contre 13,1 mm
+; (b) à 45° la marge de portée de 5 mm est active (0,6 → 1,7 mm), ce qui confirme que les pattes y
+sont à la limite de leur course. La contrainte « pied hors du châssis » divise par deux ou trois le
+nombre de positions atteignables (de 61 à 19 à 45°) mais ne limite pas directement le meilleur NESM.
+L'erreur de pied, l'accélération, l'écart de pattes et le débord de C2 n'ont aucun effet ici. Élargir le
+balancement à ±100 mm ne change presque rien (0,8 et 3,1 mm) : voir §3.5 pour l'effet du pas de
+grille.
+
+
+
+
+Figure 1 — Balayage de ξ pour le design fixe. (a) f2 en S1 et S2 : creux entre 30° et 50°. (b) nombre de positions
+                                                                    ​
+
+
+
+
+atteignables en phase avant_RL. (c) couples requis minimaux en C2 et C3 ; la limite utilisable du S-U400 (0,58 N·m) est
+franchie entre 10° et 70° environ. Traits verticaux : 45° et 77,3°.
+
+3.5 Sensibilité au pas de la grille de balancement
+Le NESM étant quadratique, un pas de 12 mm est grossier. Même design, mêmes servos :
+
+Gr2 — ξ = 45° : stabilité, couples et choix des servos                                                                         8
+  ξ                   Grille             Pas (mm)            f2 (mm)
+                                                               ​                  τ3 requis (N·m)
+                                                                                   ​                        Phase critique
+  45°                 11×11              12                  0,64                 0,972                     avant_FL
+  77,3°               11×11              12                  4,41                 0,536                     avant_FL
+  45°                 21×21              6                   1,12                 0,837                     avant_FR
+  77,3°               21×21              6                   4,41                 0,491                     avant_FL
+  45°                 41×41              3                   1,47                 0,780                     avant_FL
+  77,3°               41×41              3                   4,41                 0,469                     avant_FL
+
+À 45°, la valeur de f2 monte quand la grille s'affine (0,64 → 1,47 mm) et le couple C3 baisse (0,97 →
+                                    ​
+
+
+
+
+0,78 N·m) ; à 77,3° ils ne bougent presque pas. Conclusion : l'écart reste net (3 fois sur f2 , 65 % sur τ3            ​     ​
+
+
+
+
+), le S-U400 reste insuffisant au genou à 45° (0,78 contre 0,58) et suffisant à 77°, mais les chiffres de
+l'optimiseur à 45° sont pessimistes. Une vérification finale du design retenu à pas de 3 mm est
+recommandée.
+
+
+4. Optimisation complète : ξ libre contre ξ = 45°
+Montage « dedans », scénario S2, six triples de servos (C2 = S3306 imposé par le couple, C1 ∈
+{SG90, S-U400, S3306}, C3 ∈ {S-U400, S3306}), 8 192 points de Sobol, mêmes bornes de
+recherche que l'optimiseur normal (L2 ∈ [40, 140], L3 ∈ [60, 200], α ∈ [2, 70], β ∈ [30, 130]). Le cas « ξ
+                                                         ​                    ​
+
+
+
+
+libre » reproduit exactement les résultats sauvegardés (5 964 admissibles front de 76 points 11
+robustes couple min 0 9737 N·m NESM max 6 4116 mm).
+  Indicateur                                                        ξ libre                         ξ = 45°
+  Designs admissibles                                               5 964                           2 629
+  Points du front de Pareto                                         76                              60
+  Candidats robustes / front robuste                                21 / 11                         5/4
+  Masse minimale du front (kg)                                      1,029                           1,386
+  NESM maximal du front (mm)                                        6,41                            3,51
+  Couple C2 minimal (N·m)                                           0,974                           1,380
+  Coude : f1 (kg) / f2 (mm) / f3 (N·m)
+                  ​            ​              ​                     1,041 / 4,10 / 1,273            1,392 / 1,29 / 1,474
+  Coude : servos C1 / C2 / C3                                       SG90 / S3306 / S-U400           SG90 / S3306 / S3306
+  Coude : ξ                                                         77,3°                           45,0°
+
+Dominance : 60 points sur 60 du front à 45° sont dominés par le front libre ; 0 points sur 76 du front
+libre sont dominés par celui à 45°.
+Tous les points du front à 45° sont dominés par un point du front libre. À masse de pattes plafonnée :
+
+
+
+
+Gr2 — ξ = 45° : stabilité, couples et choix des servos                                                                       9
+  Masse de pattes f1            ​      meilleur f2 , ξ libre
+                                                         ​      meilleur f2 , ξ = 45°
+                                                                           ​              f3 min, ξ libre
+                                                                                            ​                   f3 min, ξ = 45°
+  (kg)                                 (mm)                     (mm)                      (N·m)                 (N·m)
+  ≤ 1,05                               4,46                     aucun design              0,974                 —
+  ≤ 1,15                               4,61                     aucun design              0,974                 —
+  ≤ 1,25                               4,61                     aucun design              0,974                 —
+  ≤ 1,40                               4,61                     1,57                      0,974                 1,380
+  ≤ 1,60                               6,41                     3,25                      0,974                 1,380
+  ≤ 2,00                               6,41                     3,51                      0,974                 1,380
+
+
+
+
+Figure 4 — Designs admissibles (nuage) et fronts de Pareto (points) pour ξ libre et ξ = 45°. À 45° on perd à la fois du
+NESM et du couple, et on ne descend pas sous 1,39 kg de pattes.
+
+4.1 Où se trouvent les designs admissibles en ξ
+  ξ                  Lignes             Géométries distinctes          meilleur f2 (mm)
+                                                                                   ​              f1 min (kg)
+                                                                                                    ​               f3 min (N·m)
+                                                                                                                      ​
+
+
+
+
+  0–10°              1078               990                            3,17                       1,040             1,136
+  10–20°             233                148                            3,06                       1,040             1,107
+  20–30°             83                 64                             2,67                       1,140             1,196
+  30–40°             70                 33                             2,20                       1,400             1,559
+  40–50°             97                 44                             2,20                       1,395             1,426
+  50–60°             209                102                            3,53                       1,037             0,988
+  60–70°             1227               1060                           5,00                       1,029             0,974
+  70–80°             2233               2053                           6,41                       1,031             1,005
+  80–90°             734                603                            5,24                       1,039             1,195
+
+Les designs admissibles se concentrent autour de 0–10° et 60–80°, avec un creux entre 30° et 50° :
+33 et 44 géométries distinctes (classes 30–40° et 40–50°) contre 64 à 2 053 dans les autres classes.
+Le nombre de lignes est biaisé par le raffinement local (qui échantillonne près du front), mais le creux
+
+
+Gr2 — ξ = 45° : stabilité, couples et choix des servos                                                                             10
+se voit aussi sur le nombre de géométries distinctes et sur le meilleur f2 de la classe (2,2 mm contre
+                                                                                                  ​
+
+
+
+
+5,0 à 6,4 mm pour 60–80°) et sur la masse minimale (1,40 kg contre 1,03 à 1,04 kg).
+
+4.2 Servos
+  ξ           C1 / C2 / C3                               Lignes admissibles         f1 min (kg)
+                                                                                         ​            f2 max (mm)
+                                                                                                       ​            f3 min (N·m)
+                                                                                                                      ​
+
+
+
+
+  libre       S-U400 / S3306 / S-U400                    812                        1,123             4,61          0,980
+  libre       S-U400 / S3306 / S3306                     1534                       1,469             6,41          1,113
+  libre       S3306 / S3306 / S-U400                     468                        1,473             4,31          1,051
+  libre       S3306 / S3306 / S3306                      1377                       1,818             6,23          1,170
+  libre       SG90 / S3306 / S-U400                      603                        1,029             4,46          0,974
+  libre       SG90 / S3306 / S3306                       1170                       1,369             5,28          1,093
+  45°         S-U400 / S3306 / S3306                     1007                       1,486             3,25          1,415
+  45°         S3306 / S3306 / S3306                      733                        1,829             3,51          1,500
+  45°         SG90 / S3306 / S3306                       889                        1,386             2,82          1,380
+  45°         (tous) / S3306 / S-U400                    0                          —                 —             —
+
+  Servo                        Blocage (N·m)                    Utilisable ÷ 1,2 (N·m)                 Masse (g)          Stock
+  SG90                         0,147                            0,122                                  14                 —
+  S-U400                       0,696                            0,580                                  39                 —
+  S3306                        2,354                            1,962                                  126                —
+  AX-12A                       1,500                            1,250                                  55                 1
+  MX-28T                       2,500                            2,083                                  72                 1
+  MX-64AT                      6,000                            5,000                                  126                1
+  MX-106T                      8,400                            7,000                                  153                1
+
+À 45°, C3 doit être un S3306 : avec un S-U400 au genou, aucun design n'est admissible, même en
+cherchant dans toutes les longueurs de patte. À ξ libre, le S-U400 au genou convient et fait gagner
+environ 0,35 kg de pattes.
+
+
+5. Quel moteur : S3306, ou un autre à 2,35 N·m et plus ?
+Le S3306 a un couple de blocage de 2,354 N·m ; c'est le moteur à 2,35 N·m du catalogue. Les seuls
+autres candidats proches sont les Dynamixel (AX-12A 1,5 N·m, MX-28T 2,5 N·m, MX-64AT 6,0 N·m,
+MX-106T 8,4 N·m), dont le stock est de 1 unité : il en faut 4 identiques par type d'articulation, donc ils
+sont exclus d'office. Figure 5 : couples requis comparés aux limites utilisables.
+
+
+
+
+Gr2 — ξ = 45° : stabilité, couples et choix des servos                                                                             11
+Figure 5 — Barres : couple utilisable (blocage ÷ 1,2) et masse ; lignes : couples minimaux requis par la patte S2 «
+dedans » (grille de 12 mm). Le C2 (≈ 1,4–1,7 N·m) ne passe qu'avec S3306 ou Dynamixel ; le C3 passe avec S-U400 à
+77° mais pas à 45°.
+
+
+5. Et avec un autre moteur ?
+Hypothèse de calcul : on suppose qu'on pourrait disposer de 4 exemplaires de MX-28T (2,5 N·m, 72
+g) ou MX-64AT (6,0 N·m, 126 g), alors que le stock est de 1 unité. Ces servos fonctionnent en 12 V
+(autre bus d'alimentation que S3306/S-U400) et ont une plage de 360°. Même pipeline complet (ξ
+libre, puis ξ = 45°), C2 ∈ {S3306, MX-28T, MX-64AT}, C3 ∈ {S-U400, S3306, MX-28T, MX-64AT}.
+  Cas                                Admissibles f1 min   ​      f2 max
+                                                                  ​       f3 min
+                                                                           ​       Coude f1 / f2 /
+                                                                                             ​      ​   Coude servos
+                                                 (kg)            (mm)     (N·m)    f3   ​
+
+
+
+
+  S3306 seul — ξ                     5 964               1,029   6,41     0,974    1,041 / 4,10 /       SG90 / S3306 / S-
+  libre                                                                            1,273                U400
+  avec Dynamixel —                   36 322              0,806   13,62    0,943    1,072 / 6,07 /       S-U400 / MX-28T /
+  ξ libre                                                                          1,405                MX-28T
+  S3306 seul — 45°                   2 629               1,386   3,51     1,380    1,392 / 1,29 /       SG90 / S3306 /
+                                                                                   1,474                S3306
+  avec Dynamixel —                   28 755              0,953   13,60    1,207    0,970 / 3,03 /       SG90 / MX-28T /
+  45°                                                                              1,460                MX-28T
+
+
+
+
+Gr2 — ξ = 45° : stabilité, couples et choix des servos                                                                      12
+  ξ             Servo en C2                    Lignes admissibles              f1 min (kg)
+                                                                                     ​         f2 max (mm)
+                                                                                                 ​                   f3 min (N·m)
+                                                                                                                              ​
+
+
+
+
+  libre         MX-28T                         10782                           0,806           6,78                  0,943
+  libre         MX-64AT                        15738                           1,027           13,62                 0,960
+  libre         S3306                          9802                            1,029           6,69                  0,974
+  45°           MX-28T                         7613                            0,953           3,49                  1,207
+  45°           MX-64AT                        13853                           1,169           13,60                 1,284
+  45°           S3306                          7289                            1,171           3,66                  1,282
+
+Points du front robuste (≥ 95 % de réussite Monte-Carlo) : le plus léger, le coude, et celui de NESM
+maximal.
+  Cas                                  Choix             L2 / L3
+                                                           ​       ​   ξ       C1 / C2 / C3                 f1   ​   f2   ​       f3   ​
+
+
+
+
+                                                         (mm)                                               (kg)     (mm)         (N·m)
+  S3306 seul, ξ libre                  léger             60 / 72       77°     SG90 / S3306 / S-U400        1,041    4,10         1,27
+  S3306 seul, ξ libre                  coude             60 / 72       77°     SG90 / S3306 / S-U400        1,041    4,10         1,27
+  S3306 seul, ξ libre                  max               61 / 98       75°     S-U400 / S3306 / S3306       1,507    5,05         1,55
+                                       NESM
+  avec Dynamixel, ξ                    léger             71 / 75       84° SG90 / MX-28T / S-U400           0,834    3,08         1,42
+  libre
+  avec Dynamixel, ξ                    coude             57 / 98       73°     S-U400 / MX-28T / MX-        1,072    6,07         1,41
+  libre                                                                        28T
+  avec Dynamixel, ξ                    max               107 / 142     42° S-U400 / MX-64AT / MX-           1,349    12,58        2,77
+  libre                                NESM                                28T
+  S3306 seul, 45°                      léger             50 / 87       45° SG90 / S3306 / S3306             1,392    1,29         1,47
+  S3306 seul, 45°                      coude             50 / 87       45° SG90 / S3306 / S3306             1,392    1,29         1,47
+  S3306 seul, 45°                      max               61 / 85       45° S-U400 / S3306 / S3306           1,498    1,44         1,61
+                                       NESM
+  avec Dynamixel, 45°                  léger             58 / 81       45° SG90 / MX-28T / MX-28T           0,962    1,20         1,33
+  avec Dynamixel, 45°                  coude             60 / 91       45° SG90 / MX-28T / MX-28T           0,970    3,03         1,46
+  avec Dynamixel, 45°                  max               99 / 122      45° S-U400 / MX-64AT /               1,546    12,74        2,53
+                                       NESM                                S3306
+
+Lecture physique. Le couple de hanche vaut τ2 = Mc g λ D : il croît avec la portée horizontale D de la
+                                                                           ​     ​
+
+
+
+
+patte. Or le NESM croît avec la place laissée au corps pour se décaler, donc avec la longueur des
+pattes. Avec le S3306 (limite utilisable 1,96 N·m) l'optimiseur doit garder L2 ≈ 45–60 mm, donc de      ​
+
+
+
+
+faibles NESM (6,4 mm au mieux). Avec un MX-64AT en C2 (limite utilisable 5,0 N·m) il peut allonger
+les pattes (L2 ≈ 85–110 mm) et atteint 9 à 13 mm, y compris à ξ = 45° (12,7 mm pour un point robuste
+                       ​
+
+
+
+
+de 1,55 kg ; 9,5 mm pour 1,33 kg). Le prix est la masse (≥ 1,3 kg de pattes contre 1,03) et un couple C2
+requis de 2,2 à 2,8 N·m, supérieur à ce que le S3306 sait fournir.
+
+
+
+Gr2 — ξ = 45° : stabilité, couples et choix des servos                                                                                     13
+Deuxième effet : la masse. Le MX-28T (2,5 N·m, 72 g) est plus fort et plus léger que le S3306 (2,35
+N·m, 126 g) : à 45° le meilleur compromis robuste devient 0,97 kg / 3,0 mm / 1,46 N·m (SG90 / MX-
+28T / MX-28T) contre 1,39 kg / 1,29 mm / 1,47 N·m avec le catalogue actuel, et le front ne descend
+plus qu'à 0,95 kg.
+Réponse à « si on prend l'autre moteur de 2,35 N·m ? » Le seul moteur à 2,35 N·m du catalogue est
+le S3306 lui-même. L'équivalent le plus proche est le MX-28T (2,5 N·m) : il améliore la masse (−0,4 kg
+de pattes) et, à 45°, le NESM robuste (1,3 → 3,0 mm). Pour un gain de stabilité important il faut un
+servo de classe 6 N·m en hanche (MX-64AT) : NESM ×2 à ×4, avec des pattes plus longues et plus
+lourdes.
+Réserves. Stock de 1 unité par référence Dynamixel (il en faudrait 4 identiques ou 8 au total selon
+l'architecture), alimentation 12 V (S3306/S-U400 : 6–7,4 V), bus TTL, masses du catalogue « à vérifier
+», et la plage de 360° n'est pas exploitée. Ce scénario est un calcul de sensibilité, pas une proposition
+d'achat. Le NESM de 13,6 mm est atteint avec un balancement saturé à la borne de 60 mm : la grille
+limite donc aussi ce maximum.
+
+
+6. Ce qu'il faut retenir et ce qui reste ouvert
+     45° est le meilleur choix pour l'aire du polygone à l'arrêt, pas pour la marche avec des pattes
+     aussi courtes et des servos de 2,35 N·m. Avec le catalogue disponible, imposer 45° coûte, dans
+     ce modèle, +0,35 kg de masse de pattes, 2,8 mm (×3,2) de NESM et +0,20 N·m de couple C2, et
+     force le S3306 au genou.
+     L'équipe peut réintroduire 45° de deux façons : (i) avec le catalogue actuel, en acceptant le S3306
+     en C2 et C3 et un NESM de l'ordre de 1,3 mm (1,5 mm à pas fin) en pire cas ; (ii) en se procurant
+     des servos plus puissants (§5) et des pattes plus longues, ce qui donne un NESM de 3 à 12 mm à
+     45°. Le facteur limitant est le couple, pas l'angle.
+     Entrées qui pilotent le résultat : la boîte de CdG (batterie, bras), εcdg = 10 mm, frac = 1, SF = 1,2, le
+                                                                                ​
+
+
+
+
+     châssis 200 × 200 mm, la course Rs = 40 mm, e et c de 15 mm. Elles sont toutes à confirmer ; en
+                                                         ​
+
+
+
+
+     particulier la position réelle de la batterie et la posture du bras en marche.
+     Ouvert : l'explication complète du creux autour de 40–50° repose sur les valeurs de D et les
+     relaxations ci-dessus ; je ne l'ai pas démontrée dans le cas général. Les chiffres à 45° dépendent
+     du pas de grille (§3.5). Le modèle est quasi-statique : les couples dynamiques réels de la marche
+     apprise par RL ne sont pas évalués.
+
+Références citées dans le code du programme
+     Hirose, Tsukagoshi, Yoneda (marge NESM) ; McGhee et Frank (marge de stabilité statique), telles que citées
+     dans gr2/statics.py .
+     Zeleny 1973 ; Miettinen 1999, ch. 3.2 (programmation de compromis, choix du coude).
+     Gonzalez de Santos 1998 (crawl discontinu) ; Zamani 2018 (levée de patte) ; Bjelonic 2023 (incertitudes de 10
+     %).
+     e-manual Robotis AX-12A (charge stable ≤ 1/5 du couple de blocage, utilisée pour le paramètre frac).
+
+
+
+
+Gr2 — ξ = 45° : stabilité, couples et choix des servos                                                          14
+

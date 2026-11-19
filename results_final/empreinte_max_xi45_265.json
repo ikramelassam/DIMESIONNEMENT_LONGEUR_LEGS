@@ -1,0 +1,108 @@
+{
+ "xi": 45.0,
+ "E_faisable": 265.0,
+ "E_utile": 265.0,
+ "E_robuste": null,
+ "detail": [
+  {
+   "E": 265.0,
+   "xi": 45.0,
+   "combos": [
+    {
+     "E": 265.0,
+     "combo": "SG90/S3306/S-U400",
+     "echantillon": 2048,
+     "admissibles_sobol": 0,
+     "admissibles": 0
+    },
+    {
+     "E": 265.0,
+     "combo": "S-U400/S3306/S-U400",
+     "echantillon": 2048,
+     "admissibles_sobol": 0,
+     "admissibles": 0
+    },
+    {
+     "E": 265.0,
+     "combo": "S3306/S3306/S-U400",
+     "echantillon": 2048,
+     "admissibles_sobol": 0,
+     "admissibles": 0
+    },
+    {
+     "E": 265.0,
+     "combo": "SG90/S3306/S3306",
+     "echantillon": 2048,
+     "admissibles_sobol": 436,
+     "admissibles": 1307,
+     "nesm_max": 1.488,
+     "n_nesm_cible": 0,
+     "C2_min": 1.597,
+     "masse_pattes_min": 1.392
+    },
+    {
+     "E": 265.0,
+     "combo": "S-U400/S3306/S3306",
+     "echantillon": 2048,
+     "admissibles_sobol": 482,
+     "admissibles": 1363,
+     "nesm_max": 1.617,
+     "n_nesm_cible": 0,
+     "C2_min": 1.631,
+     "masse_pattes_min": 1.487
+    },
+    {
+     "E": 265.0,
+     "combo": "S3306/S3306/S3306",
+     "echantillon": 2048,
+     "admissibles_sobol": 429,
+     "admissibles": 1350,
+     "nesm_max": 2.024,
+     "n_nesm_cible": 5,
+     "C2_min": 1.65,
+     "masse_pattes_min": 1.835
+    }
+   ],
+   "faisable": true,
+   "meilleur_nesm": {
+    "L2": 52.229,
+    "L3": 87.072,
+    "alpha": 36.695,
+    "beta": 82.875,
+    "xi": 45.0,
+    "D": 52.679,
+    "h": 40.19,
+    "f1_masse_pattes": 1.842,
+    "f2_nesm": 2.024,
+    "f3_couple_C2": 1.753,
+    "servo_C1": "S3306",
+    "servo_C2": "S3306",
+    "servo_C3": "S3306"
+   },
+   "utile": true,
+   "robuste": false,
+   "meilleur_utile": {
+    "L2": 52.229,
+    "L3": 87.072,
+    "alpha": 36.695,
+    "beta": 82.875,
+    "xi": 45.0,
+    "D": 52.679,
+    "h": 40.19,
+    "f1_masse_pattes": 1.842,
+    "f2_nesm": 2.024,
+    "f3_couple_C2": 1.753,
+    "servo_C1": "S3306",
+    "servo_C2": "S3306",
+    "servo_C3": "S3306"
+   },
+   "taux_reussite_meilleurs": [
+    0.38,
+    0.38,
+    0.47,
+    0.51,
+    0.53
+   ]
+  }
+ ]
+}

@@ -1,0 +1,89 @@
+{
+ "cas": "E400",
+ "montage": "dedans",
+ "scenario": "S2",
+ "empreinte_imposee_mm": 400.0,
+ "bande_empreinte_mm": [
+  396.0,
+  400.0
+ ],
+ "illimite": {
+  "admissibles": 4514,
+  "couple_C2_min": 1.7894046363069755,
+  "couple_C3_min": 0.22161486127014643,
+  "couple_C1_min": 0.11611349300114211,
+  "nesm_max": 12.294207675512837,
+  "masse_pattes_min": 0.5022486954174129,
+  "D_min": 103.29593146334678,
+  "D_max": 148.08699554058595
+ },
+ "lab": {
+  "stats": {
+   "SG90/S3306/S-U400": {
+    "geometries_admissibles": 0,
+    "apres_raffinement": 0
+   },
+   "S-U400/S3306/S-U400": {
+    "geometries_admissibles": 0,
+    "apres_raffinement": 0
+   },
+   "S3306/S3306/S-U400": {
+    "geometries_admissibles": 0,
+    "apres_raffinement": 0
+   },
+   "SG90/S3306/S3306": {
+    "geometries_admissibles": 0,
+    "apres_raffinement": 0
+   },
+   "S-U400/S3306/S3306": {
+    "geometries_admissibles": 0,
+    "apres_raffinement": 0
+   },
+   "S3306/S3306/S3306": {
+    "geometries_admissibles": 0,
+    "apres_raffinement": 0
+   }
+  },
+  "admissibles": 0,
+  "pareto": 0,
+  "candidats": 0,
+  "robustes": 0,
+  "pareto_robuste": 0,
+  "min_couple_C2": null,
+  "max_nesm": null,
+  "choix": {},
+  "duree_s": 841,
+  "combos": [
+   [
+    "SG90",
+    "S3306",
+    "S-U400"
+   ],
+   [
+    "S-U400",
+    "S3306",
+    "S-U400"
+   ],
+   [
+    "S3306",
+    "S3306",
+    "S-U400"
+   ],
+   [
+    "SG90",
+    "S3306",
+    "S3306"
+   ],
+   [
+    "S-U400",
+    "S3306",
+    "S3306"
+   ],
+   [
+    "S3306",
+    "S3306",
+    "S3306"
+   ]
+  ]
+ }
+}

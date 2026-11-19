@@ -1,0 +1,85 @@
+[
+ {
+  "empreinte": 240.0,
+  "echantillon": 4096,
+  "admissibles": 0
+ },
+ {
+  "empreinte": 270.0,
+  "echantillon": 4096,
+  "admissibles": 1871,
+  "couple_C2_min": 0.9011430774598842,
+  "couple_C3_min": 0.23182033863318316,
+  "couple_C1_min": 0.07241305744938847,
+  "nesm_max": 4.001981132353009,
+  "masse_pattes_min": 0.47372939295947547,
+  "L2_L3_min": 102.29844592511654,
+  "xi_median": 53.42344111762941,
+  "D_min": 38.929785439586695
+ },
+ {
+  "empreinte": 300.0,
+  "echantillon": 4096,
+  "admissibles": 2461,
+  "couple_C2_min": 1.1370701475681173,
+  "couple_C3_min": 0.221832274776478,
+  "couple_C1_min": 0.08268532544660868,
+  "nesm_max": 8.462804738701664,
+  "masse_pattes_min": 0.4815815318898857,
+  "L2_L3_min": 114.41594427451491,
+  "xi_median": 54.10544388927519,
+  "D_min": 53.50276093171989
+ },
+ {
+  "empreinte": 330.0,
+  "echantillon": 4096,
+  "admissibles": 2730,
+  "couple_C2_min": 1.3370018344683372,
+  "couple_C3_min": 0.25371258524781265,
+  "couple_C1_min": 0.09273233125291602,
+  "nesm_max": 12.150867454051792,
+  "masse_pattes_min": 0.48569688049089155,
+  "L2_L3_min": 120.76679088100553,
+  "xi_median": 53.070185305550694,
+  "D_min": 68.15081690884122
+ },
+ {
+  "empreinte": 360.0,
+  "echantillon": 4096,
+  "admissibles": 2846,
+  "couple_C2_min": 1.5300972339250085,
+  "couple_C3_min": 0.2341366365069193,
+  "couple_C1_min": 0.10302655422854222,
+  "nesm_max": 12.416230275839666,
+  "masse_pattes_min": 0.4947174867678645,
+  "L2_L3_min": 134.68747958003777,
+  "xi_median": 53.32880771253258,
+  "D_min": 83.20906087962368
+ },
+ {
+  "empreinte": 380.0,
+  "echantillon": 4096,
+  "admissibles": 2581,
+  "couple_C2_min": 1.6571339608703353,
+  "couple_C3_min": 0.2356053444656734,
+  "couple_C1_min": 0.1095104070875821,
+  "nesm_max": 12.318649403892522,
+  "masse_pattes_min": 0.49971939575689783,
+  "L2_L3_min": 142.40647493348428,
+  "xi_median": 51.27519428730011,
+  "D_min": 93.19759528012219
+ },
+ {
+  "empreinte": 400.0,
+  "echantillon": 4096,
+  "admissibles": 2231,
+  "couple_C2_min": 1.8083662099632187,
+  "couple_C3_min": 0.24064620174614954,
+  "couple_C1_min": 0.11707425389268564,
+  "nesm_max": 12.156994350011175,
+  "masse_pattes_min": 0.5046343984999716,
+  "L2_L3_min": 149.99135570983265,
+  "xi_median": 43.874965365976095,
+  "D_min": 103.10022842958463
+ }
+]

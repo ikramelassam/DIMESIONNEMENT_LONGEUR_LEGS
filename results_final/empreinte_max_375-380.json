@@ -1,0 +1,129 @@
+{
+ "xi": "libre",
+ "E_faisable": 375.0,
+ "E_utile": null,
+ "E_robuste": null,
+ "detail": [
+  {
+   "E": 375.0,
+   "xi": null,
+   "combos": [
+    {
+     "E": 375.0,
+     "combo": "SG90/S3306/S-U400",
+     "echantillon": 2048,
+     "admissibles_sobol": 0,
+     "admissibles": 0
+    },
+    {
+     "E": 375.0,
+     "combo": "S-U400/S3306/S-U400",
+     "echantillon": 2048,
+     "admissibles_sobol": 1,
+     "admissibles": 3,
+     "nesm_max": 0.596,
+     "n_nesm_cible": 0,
+     "C2_min": 1.953,
+     "masse_pattes_min": 1.188
+    },
+    {
+     "E": 375.0,
+     "combo": "S3306/S3306/S-U400",
+     "echantillon": 2048,
+     "admissibles_sobol": 0,
+     "admissibles": 0
+    },
+    {
+     "E": 375.0,
+     "combo": "SG90/S3306/S3306",
+     "echantillon": 2048,
+     "admissibles_sobol": 0,
+     "admissibles": 0
+    },
+    {
+     "E": 375.0,
+     "combo": "S-U400/S3306/S3306",
+     "echantillon": 2048,
+     "admissibles_sobol": 0,
+     "admissibles": 0
+    },
+    {
+     "E": 375.0,
+     "combo": "S3306/S3306/S3306",
+     "echantillon": 2048,
+     "admissibles_sobol": 0,
+     "admissibles": 0
+    }
+   ],
+   "faisable": true,
+   "meilleur_nesm": {
+    "L2": 109.55,
+    "L3": 95.557,
+    "alpha": 20.401,
+    "beta": 94.269,
+    "xi": 15.138,
+    "D": 95.566,
+    "h": 42.104,
+    "f1_masse_pattes": 1.188,
+    "f2_nesm": 0.596,
+    "f3_couple_C2": 1.956,
+    "servo_C1": "S-U400",
+    "servo_C2": "S3306",
+    "servo_C3": "S-U400"
+   },
+   "utile": false,
+   "robuste": false
+  },
+  {
+   "E": 380.0,
+   "xi": null,
+   "combos": [
+    {
+     "E": 380.0,
+     "combo": "SG90/S3306/S-U400",
+     "echantillon": 2048,
+     "admissibles_sobol": 0,
+     "admissibles": 0
+    },
+    {
+     "E": 380.0,
+     "combo": "S-U400/S3306/S-U400",
+     "echantillon": 2048,
+     "admissibles_sobol": 0,
+     "admissibles": 0
+    },
+    {
+     "E": 380.0,
+     "combo": "S3306/S3306/S-U400",
+     "echantillon": 2048,
+     "admissibles_sobol": 0,
+     "admissibles": 0
+    },
+    {
+     "E": 380.0,
+     "combo": "SG90/S3306/S3306",
+     "echantillon": 2048,
+     "admissibles_sobol": 0,
+     "admissibles": 0
+    },
+    {
+     "E": 380.0,
+     "combo": "S-U400/S3306/S3306",
+     "echantillon": 2048,
+     "admissibles_sobol": 0,
+     "admissibles": 0
+    },
+    {
+     "E": 380.0,
+     "combo": "S3306/S3306/S3306",
+     "echantillon": 2048,
+     "admissibles_sobol": 0,
+     "admissibles": 0
+    }
+   ],
+   "faisable": false,
+   "utile": false,
+   "robuste": false
+  }
+ ]
+}

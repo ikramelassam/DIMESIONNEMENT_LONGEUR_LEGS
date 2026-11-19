@@ -1,0 +1,135 @@
+{
+ "xi": "libre",
+ "E_faisable": 350.0,
+ "E_utile": 350.0,
+ "E_robuste": null,
+ "detail": [
+  {
+   "E": 350.0,
+   "xi": null,
+   "combos": [
+    {
+     "E": 350.0,
+     "combo": "SG90/S3306/S-U400",
+     "echantillon": 2048,
+     "admissibles_sobol": 5,
+     "admissibles": 50,
+     "nesm_max": 0.722,
+     "n_nesm_cible": 0,
+     "C2_min": 1.732,
+     "masse_pattes_min": 1.057
+    },
+    {
+     "E": 350.0,
+     "combo": "S-U400/S3306/S-U400",
+     "echantillon": 2048,
+     "admissibles_sobol": 34,
+     "admissibles": 383,
+     "nesm_max": 3.178,
+     "n_nesm_cible": 28,
+     "C2_min": 1.747,
+     "masse_pattes_min": 1.153
+    },
+    {
+     "E": 350.0,
+     "combo": "S3306/S3306/S-U400",
+     "echantillon": 2048,
+     "admissibles_sobol": 6,
+     "admissibles": 57,
+     "nesm_max": 1.935,
+     "n_nesm_cible": 0,
+     "C2_min": 1.856,
+     "masse_pattes_min": 1.508
+    },
+    {
+     "E": 350.0,
+     "combo": "SG90/S3306/S3306",
+     "echantillon": 2048,
+     "admissibles_sobol": 0,
+     "admissibles": 0
+    },
+    {
+     "E": 350.0,
+     "combo": "S-U400/S3306/S3306",
+     "echantillon": 2048,
+     "admissibles_sobol": 31,
+     "admissibles": 321,
+     "nesm_max": 1.904,
+     "n_nesm_cible": 0,
+     "C2_min": 1.853,
+     "masse_pattes_min": 1.489
+    },
+    {
+     "E": 350.0,
+     "combo": "S3306/S3306/S3306",
+     "echantillon": 2048,
+     "admissibles_sobol": 0,
+     "admissibles": 0
+    }
+   ],
+   "faisable": true,
+   "meilleur_nesm": {
+    "L2": 100.744,
+    "L3": 95.129,
+    "alpha": 20.565,
+    "beta": 97.285,
+    "xi": 75.806,
+    "D": 82.261,
+    "h": 43.973,
+    "f1_masse_pattes": 1.182,
+    "f2_nesm": 3.178,
+    "f3_couple_C2": 1.922,
+    "servo_C1": "S-U400",
+    "servo_C2": "S3306",
+    "servo_C3": "S-U400"
+   },
+   "utile": true,
+   "robuste": false,
+   "meilleur_utile": {
+    "L2": 100.744,
+    "L3": 95.129,
+    "alpha": 20.565,
+    "beta": 97.285,
+    "xi": 75.806,
+    "D": 82.261,
+    "h": 43.973,
+    "f1_masse_pattes": 1.182,
+    "f2_nesm": 3.178,
+    "f3_couple_C2": 1.922,
+    "servo_C1": "S-U400",
+    "servo_C2": "S3306",
+    "servo_C3": "S-U400"
+   },
+   "taux_reussite_meilleurs": [
+    0.21,
+    0.23,
+    0.29,
+    0.27,
+    0.22,
+    0.4,
+    0.27,
+    0.28,
+    0.06,
+    0.18,
+    0.16,
+    0.28,
+    0.28,
+    0.33,
+    0.29,
+    0.32,
+    0.14,
+    0.13,
+    0.23,
+    0.27,
+    0.1,
+    0.26,
+    0.29,
+    0.31,
+    0.23,
+    0.29,
+    0.25,
+    0.31
+   ]
+  }
+ ]
+}

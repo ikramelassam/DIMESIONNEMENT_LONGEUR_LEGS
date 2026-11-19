@@ -1,0 +1,203 @@
+<h1>Cohérence simulateur–optimiseur, lecture inverse et guide d'utilisation — Gr2</h1>
+<p class="sub">Audit de {{V:designs}} designs × 27 combinaisons de servos · contraintes et objectifs lus à l'envers · comparaison à l'optimum · feuille de route</p>
+
+<h3>Objet</h3>
+<p>Deux programmes calculent le même modèle de pattes : l'<b>optimiseur</b> (Python) cherche les meilleures longueurs, postures et servos ; le <b>simulateur</b> (JavaScript, dans un navigateur) fait l'inverse : on <i>donne</i> les variables, il <i>lit</i> les contraintes, les trois fonctions objectifs et la position du design par rapport à l'optimum. Ce rapport répond à quatre questions : (1) les deux programmes donnent-ils les mêmes nombres ? (2) que fait le simulateur quand un design casse une contrainte, et que valent alors les objectifs ? (3) à quelle distance de l'optimum se trouve un design donné ? (4) comment utiliser tout cela, dans quel ordre, et avec quelles précautions ?</p>
+
+<div class="callout concl">
+<b>Conclusion de l'audit.</b> Sur {{V:designs}} designs (points des fronts de Pareto, designs admissibles quelconques, tirages aléatoires dans et hors des bornes de recherche, perturbations d'une variable à la fois) et 27 combinaisons de servos, soit {{V:pairs}} cas rejoués dans les deux programmes :
+<ul>
+<li><b>{{V:pre_diff}} désaccord</b> sur le pré-filtre géométrique (garde au sol, gabarit, θ₃, axes C1), écart relatif maximal des marges {{V:viol_err}} ;</li>
+<li><b>{{V:adm_diff}} désaccord</b> d'admissibilité sur {{V:pairs}} cas ({{V:both_adm}} cas admissibles dans les deux, {{V:both_inf}} non admissibles dans les deux, {{V:pre_inf}} écartés par le pré-filtre dans les deux) ;</li>
+<li>sur les {{V:both_adm}} cas admissibles dans les deux, $f_1$, $f_2$, $f_3$, les couples requis minimaux, la masse et les parts de couple de blocage concordent à <b>{{V:val_err}}</b> près en valeur relative (les courses utilisées $C_1$, $C_2$ à {{V:span_err}}, arrondi des fichiers Python en simple précision) ;</li>
+<li>trois grandeurs lues « à la position du corps retenue » (couple maximal de $C_1$, de $C_3$, course de $C_3$) diffèrent dans <b>{{V:ties_n}} cas</b> sur {{V:both_adm}} ({{V:ties_pct}} %) ; dans chacun, la valeur Python est atteinte par une autre position <b>ex æquo</b> du simulateur (§3.2) : ce n'est pas une divergence du modèle ;</li>
+<li>le nombre de designs du front de Pareto qui dominent chaque design est identique dans les deux programmes dans {{V:dom_agree}} cas sur {{V:both_adm}}.</li>
+</ul>
+Le simulateur et l'optimiseur sont donc <b>le même calcul</b>. L'audit ne prouve pas que le modèle représente le robot réel : il prouve que les deux implémentations ne divergent pas (§7).
+</div>
+
+<h2>1. Deux programmes, un seul modèle</h2>
+<figure><img src="{{IMG:archi}}" alt="architecture"><figcaption>Figure 1 — Architecture. Les entrées vivent dans <code>config.yaml</code>. L'optimiseur (bleu) et le simulateur (rouge) calculent le même modèle ; les résultats de l'optimiseur sont réexportés comme front de référence du simulateur (vert). L'audit (orange) compare les deux sorties.</figcaption></figure>
+
+<h3>1.1 Le problème, écrit une fois</h3>
+<p>Soient $x=(L_2,L_3,\alpha,\beta,\xi)\in\mathbb{R}^5$ les variables continues, $c=(c_1,c_2,c_3)$ le choix de servo de chaque articulation, et $\theta$ l'ensemble des entrées de <code>config.yaml</code> (châssis, masses, marges, tâches). Le modèle fournit :</p>
+<ul>
+<li>des contraintes $g_k(x,c;\theta)\le 0$ (§1.2) ;</li>
+<li>trois objectifs : $f_1$ masse des quatre pattes (à minimiser), $f_2$ marge de stabilité NESM garantie (à maximiser), $f_3$ couple requis en $C_2$ (à minimiser).</li>
+</ul>
+<div class="eq-note">
+$$\text{Optimiseur :}\quad \min_{x,\,c}\ \bigl(f_1,\,-f_2,\,f_3\bigr)\quad\text{sous}\quad g_k(x,c;\theta)\le 0\ \ \forall k$$
+$$\text{Simulateur :}\quad (x,c,\theta)\ \longmapsto\ \bigl(g_1,\dots,g_K\bigr),\ \ \bigl(f_1,f_2,f_3\bigr),\ \ \text{position par rapport au front de Pareto}$$
+</div>
+<p>Le simulateur est donc l'<b>évaluation directe</b> de la fonction que l'optimiseur parcourt ; « problème inverse » désigne ici le sens de lecture de l'utilisateur : on choisit la <i>cause</i> (les variables) et on observe l'<i>effet</i> (contraintes, objectifs), au lieu de demander la cause optimale.</p>
+
+<h3>1.2 Les contraintes, avec leur origine</h3>
+<p>Un design est <b>admissible</b> si le pré-filtre géométrique passe, si <b>chacune des 14 phases</b> (4 « avant », 4 « arrière », 4 « obstacle », rotation, saisie) possède au moins une position du corps qui respecte à la fois géométrie, stabilité et couples, si les courses d'articulation et la masse sont respectées. Le tableau de contraintes du simulateur reprend exactement ces lignes :</p>
+<table>
+<thead><tr><th>Id</th><th>Contrainte</th><th>Limite (config.yaml)</th><th>Origine</th></tr></thead><tbody>
+<tr><td>G5</td><td>garde au sol $h=H_2-e$</td><td>$\ge$ obstacle + marge = 40 mm</td><td>CDC (obstacle 30 mm) + marge d'équipe</td></tr>
+<tr><td>G3</td><td>$\theta_3=\alpha+\beta$ au repos</td><td>$\in[20^\circ;160^\circ]$</td><td>garde-fou de singularité ($\det J\propto\sin\theta_3$)</td></tr>
+<tr><td>G6</td><td>empreinte au sol (pieds + diamètre)</td><td>$\le 400$ mm</td><td>CDC (gabarit)</td></tr>
+<tr><td>G10</td><td>châssis</td><td>$\le 400$ mm</td><td>CDC</td></tr>
+<tr><td>G7</td><td>écart des axes $C_1$ voisins</td><td>$\ge 40$ mm</td><td>encombrement des servos (hypothèse)</td></tr>
+<tr><td>PH</td><td>phases réalisables</td><td>14 sur 14</td><td>CDC (marche avant/arrière, rotation, obstacle, saisie)</td></tr>
+<tr><td>NESM</td><td>$f_2\ge$ nesm_min</td><td>0 mm (dure) ; cible de l'équipe 2 mm (souple)</td><td>équipe</td></tr>
+<tr><td>T1–T3</td><td>couple requis $\le C_{\text{stall}}\cdot\text{frac}/SF$</td><td>dépend du servo</td><td>catalogue FabLab, SF = 1,2</td></tr>
+<tr><td>R1–R3</td><td>course utilisée $\le$ course du servo $-2\times5^\circ$</td><td>dépend du servo</td><td>catalogue</td></tr>
+<tr><td>M</td><td>masse du robot sans bras</td><td>$\le 4$ kg</td><td>CDC + interprétation de l'équipe</td></tr>
+<tr><td>U1–U3</td><td>part du couple de blocage utilisée</td><td>$\le 20\,\%$ (recommandation, non dure)</td><td>Robotis (e-manual AX-12A)</td></tr>
+</tbody></table>
+<p class="note">Les lignes « souples » (NESM cible, U1–U3) n'entrent pas dans l'admissibilité : elles sont affichées pour que l'on voie ce qui est sacrifié. Le simulateur ne compte comme « violées » que les contraintes dures.</p>
+
+<h3>1.3 Les trois objectifs : définitions exactes</h3>
+<p>Pour la phase $p$ et la position du corps $s$ (grille de balancement $n\times n$, $n=11$), notons $\mathcal S_p$ l'ensemble des positions qui respectent géométrie, stabilité (NESM $\ge$ seuil, SSM corrigée $\ge$ seuil) et limites de couple de $C_1,C_2,C_3$. Alors :</p>
+<div class="eq-note">
+$$f_1=4\,m_{\text{patte}}(L_2,L_3,c),\qquad f_2=\min_{p}\ \max_{s\in\mathcal S_p}\ \text{NESM}(p,s),\qquad f_3=\max_{p}\ \min_{s\in\mathcal S'_p}\ \tau_{C_2}^{\text{req}}(p,s)$$
+</div>
+<p>où $\mathcal S'_p$ est défini comme $\mathcal S_p$ sans la limite de couple de $C_2$ (c'est ce couple que l'on minimise). $f_2$ est la marge de stabilité que l'on peut <i>garantir</i> dans la pire phase en choisissant au mieux la position du corps ; $f_3$ est le couple dont $C_2$ aura besoin dans la pire phase, en choisissant au mieux cette position. Les dérivations (statique, réactions barycentriques, pire CdG exact sur une boîte, NESM de Hirose 2012) figurent dans le rapport v2.</p>
+
+<h2>2. Méthode de l'audit</h2>
+<h3>2.1 Trois niveaux de vérification</h3>
+<table>
+<thead><tr><th>Niveau</th><th>Ce qui est comparé</th><th>Preuve</th></tr></thead><tbody>
+<tr><td><b>A. Modèle</b></td><td><code>gr2/evaluate.py</code> (numpy) contre <code>sim/model.js</code> : pré-filtre, NESM, SSM corrigée, coefficients de couple par phase et position, admissibilité, objectifs</td><td>validation fine sur 12 designs (20 328 valeurs, 324 combinaisons de servos : écart relatif max {{V:valid_model}}) ; <b>audit large</b> du §3</td></tr>
+<tr><td><b>B. Optimiseur</b></td><td><code>gr2/pipeline.py</code> contre <code>sim/opt.js</code> : lignes de résultat, front de Pareto, couches de non-dominance, coude, ε-contrainte</td><td>128 lignes à {{V:valid_opt_err}} ; fronts, couches, coude et ε-choix identiques sur 2 cas ; pipeline de bout en bout identique sur le même échantillon (2 cas sur 2)</td></tr>
+<tr><td><b>C. Sorties sauvegardées</b></td><td>les CSV de <code>results_exact/</code> contre une réévaluation du code actuel</td><td>§3.3</td></tr>
+</tbody></table>
+<p>Un contrôle <i>physique</i> indépendant existe aussi côté Python : <code>tests/test_crosscheck.py</code> recalcule le couple de $C_2$ avec une cinématique écrite à la main et un programme linéaire (<code>linprog</code>), sans passer par l'évaluateur vectorisé ; il concorde. Il y a 16 tests unitaires (aller-retour FK/IK, équilibre des réactions, pire CdG aux coins, NESM 3D = NESM plan sur sol plat, monotonie du couple, mode exact…).</p>
+
+<h3>2.2 L'échantillon de l'audit</h3>
+<p>Le but est de tester <b>aussi des designs qui cassent des contraintes</b>, pas seulement des optima. L'échantillon (par montage et scénario, soit 4 cas) contient :</p>
+<ul>
+<li>le <b>front robuste</b> complet et 30 points du <b>front de Pareto</b> sauvegardés ;</li>
+<li>40 designs <b>admissibles</b> tirés au hasard ;</li>
+<li>40 tirages uniformes dans les bornes de recherche (la plupart sont non admissibles) ;</li>
+<li>40 tirages <b>hors des bornes</b> (jusqu'à 35 % au-delà), pour forcer toutes les violations ;</li>
+<li>30 <b>perturbations d'une seule variable</b> autour d'un optimum (longueurs : ±10, 25, 50 % ; angles : ±6°, ±15°, ±30°).</li>
+</ul>
+<p>Chacun des {{V:designs}} designs est évalué avec les 27 combinaisons $\{\text{SG90},\text{S-U400},\text{S3306}\}^3$ (mode « exact » : le CdG des pattes est calculé avec les servos réellement choisis), soit {{V:pairs}} cas. Pour chaque cas on compare : le pré-filtre (booléen et valeurs des cinq marges), l'admissibilité, puis, si admissible, quinze grandeurs, la phase critique, et le nombre de points du front de référence qui dominent le design. Deux valeurs sont égales si leur écart relatif est inférieur à $10^{-6}$ (les écarts réels sont bien plus petits, voir ci-dessous).</p>
+
+<h2>3. Résultats de l'audit</h2>
+<h3>3.1 Admissibilité et valeurs</h3>
+{{TBL_AUDIT_TAGS}}
+<p class="note">« Admissibles dans les deux » = cas où le pré-filtre passe et où toutes les phases sont réalisables, dans les deux programmes. Zéro désaccord signifie que la décision admissible / non admissible est la même partout, y compris pour les designs qui cassent une contrainte.</p>
+<figure><img src="{{IMG:audit}}" alt="audit"><figcaption>Figure 2 — Gauche et centre : $f_2$ et $f_3$ du simulateur contre ceux de Python, un point par cas admissible ({{V:both_adm}} points) ; tous sont sur la diagonale. Droite : distribution du logarithme de l'écart relatif sur $f_1$, $f_2$, $f_3$ ; les écarts sont au niveau de l'arrondi des flottants (≈ $10^{-13}$).</figcaption></figure>
+{{TBL_AUDIT_ERR}}
+
+<h3>3.2 Ce qui diffère malgré tout, et pourquoi</h3>
+<ul>
+<li><b>Phase critique.</b> {{V:crit_diff}} cas sur {{V:both_adm}} nomment une phase critique différente. Ce sont des <b>ex æquo</b> : les quatre pattes sont symétriques par rapport au centre du châssis, plusieurs phases ont exactement le même NESM, et chaque programme retient la première rencontrée. La <i>valeur</i> de $f_2$ est identique.</li>
+<li><b>Position du corps retenue en cas d'ex æquo.</b> Pour la phase de saisie (quatre pieds au sol, bras tendu), deux positions du corps symétriques par rapport à l'axe du robot donnent le même NESM ; quand les deux sont admissibles, Python et le simulateur peuvent en retenir une différente, et les grandeurs lues à cette position (couple maximal de $C_1$ ou de $C_3$, course de $C_3$) diffèrent. Le script <code>audit/check_ties.js</code> le vérifie : pour les {{V:ties_n}} cas concernés, la valeur Python est atteinte par un ex æquo du simulateur. Les <i>objectifs</i> ($f_1$, $f_2$, $f_3$) ne dépendent pas de ce choix.</li>
+<li><b>Dominance.</b> Le simulateur compte les designs du front qui dominent le design testé avec une tolérance relative de $10^{-7}$ : sans elle, deux valeurs égales à $10^{-15}$ près (par exemple deux masses calculées pour les mêmes $L_2$, $L_3$ par deux chemins de calcul) départageraient arbitrairement « dominé » et « non dominé ». Avec la définition stricte, {{V:dom_strict}} cas sur {{V:both_adm}} changeraient de classe ; avec la tolérance, le nombre de dominants est identique dans les deux programmes dans tous les cas.</li>
+<li><b>Générateurs aléatoires.</b> Le tirage de Sobol (embrouillage), le raffinement et le Monte-Carlo utilisent des générateurs différents en JS et en Python. Deux <i>exécutions complètes</i> ne donnent donc pas les mêmes points, seulement des fronts voisins ; en revanche, sur un <i>même échantillon</i>, les résultats sont identiques (§2.1, niveau B).</li>
+</ul>
+
+<h3>3.3 Les résultats sauvegardés sont reproductibles</h3>
+<p>Les {{V:csv_n}} lignes du front robuste sauvegardé (4 cas) ont été réévaluées avec le code actuel et leur combinaison de servos d'origine : écart relatif maximal sur $f_1$, $f_2$, $f_3$ : <b>{{V:csv_err}}</b>. Les fichiers de <code>results_exact/</code> correspondent donc bien à <code>config.yaml</code> et au code courants ; le front de référence du simulateur n'est pas périmé.</p>
+
+<h2>4. Le simulateur comme lecture inverse</h2>
+<h3>4.1 Ce qu'il affiche quand on fixe les variables</h3>
+<ol>
+<li><b>Contraintes chiffrées</b> : pour chaque ligne du tableau §1.2, la <i>valeur</i>, la <i>limite</i>, la <i>marge</i> (limite − valeur, ou valeur − limite ; positive = respectée) et l'état (respectée, VIOLÉE, non atteinte pour les contraintes souples, non évaluable). Pour les couples, la valeur est le couple <i>minimal</i> requis sur toutes les positions admissibles, au pire de toutes les phases.</li>
+<li><b>Objectifs</b> : $f_1$, $f_2$, $f_3$. Si le design est hors domaine admissible, les valeurs encore définies sont affichées <b>avec un drapeau rouge</b>, et le simulateur ajoute deux valeurs diagnostiques : $f_2$ et le couple $C_2$ requis <b>en ignorant les limites de couple</b> des servos. Elles répondent à la question « le seul problème est-il un servo trop faible ? » : si ces valeurs existent, la géométrie et la stabilité passent et il suffit d'un servo plus fort (de combien : le couple $C_2$ requis) ; si elles n'existent pas, le défaut est géométrique ou de stabilité.</li>
+<li><b>Position par rapport à l'optimum</b> (§4.2).</li>
+</ol>
+<p>Une ligne reste « non évaluable » quand elle dépend d'une phase sans position admissible (course utilisée, NESM, couples) : c'est une <i>conséquence</i> de la contrainte PH violée, pas une cause. Le décompte « contraintes dures violées » les exclut, pour pointer la cause racine.</p>
+
+<h3>4.2 La comparaison à l'optimum</h3>
+<p>Le <b>front de référence</b> est le front de Pareto 3D du cas (montage × scénario) sauvegardé dans <code>results_exact/</code> : 76 à 104 designs non dominés selon le cas. Le simulateur donne :</p>
+<ul>
+<li><b>La dominance</b> : un design est <i>dominé</i> si un point du front est au moins aussi bon sur les trois objectifs et strictement meilleur sur un. S'il est dominé, le simulateur cite le point dominant le plus proche. Un design non dominé est sur (ou près de) le front : il n'existe pas d'amélioration gratuite.</li>
+<li><b>Un écart normalisé à l'idéal.</b> Notons $f^\star=(\min f_1,\max f_2,\min f_3)$ l'idéal et $f^{\text{nad}}=(\max f_1,\min f_2,\max f_3)$ le point le plus mauvais, calculés sur le front. La distance de compromis (Zeleny 1973 ; Miettinen 1999) est
+$$d(f)=\sqrt{\Bigl(\tfrac{f_1-f_1^\star}{f_1^{\text{nad}}-f_1^\star}\Bigr)^2+\Bigl(\tfrac{f_2^\star-f_2}{f_2^\star-f_2^{\text{nad}}}\Bigr)^2+\Bigl(\tfrac{f_3-f_3^\star}{f_3^{\text{nad}}-f_3^\star}\Bigr)^2}$$
+$d=0$ est l'idéal (inatteignable : les trois objectifs s'opposent) ; le point de coude du front minimise $d$ sur le front robuste.</li>
+<li><b>Les écarts à six points nommés</b> : le coude, la solution ε-contrainte, le plus petit couple $C_2$ du front robuste, et les trois extrêmes du front (le plus léger, le plus stable, le plus faible couple). Pour chacun : $f$, $\Delta f=f_{\text{design}}-f_{\text{réf}}$ en valeur et en pourcentage, et la relation (identique, domine, dominé, incomparable). Un bouton <i>Charger</i> met ce point dans le simulateur.</li>
+<li><b>Le point du front le plus proche dans l'espace des variables</b> (distance normalisée par les bornes de recherche), utile pour un design hors domaine : « d'où revenir ».</li>
+</ul>
+<p>Le simulateur <b>avertit</b> quand la comparaison n'est plus à périmètre égal : si la configuration diffère de celle des résultats sauvegardés (liste des champs modifiés) ou si la grille de balancement diffère. Dans ce cas, relancer l'optimisation dans la carte « Optimisation complète » puis choisir <i>Dernière optimisation</i> comme référence.</p>
+
+<h2>5. Expériences : casser une contrainte, voir ce qui se passe</h2>
+<p>Point de départ : le design recommandé du rapport v2 (montage « dedans », pire CdG S2, coude du front robuste) :</p>
+{{TBL_REF}}
+<p>Chaque variable est ensuite déplacée <b>seule</b>, tout le reste inchangé. Les résultats ont été produits avec le programme de l'audit (<code>sim/experiences.js</code>), donc par le même calcul que le simulateur.</p>
+
+<h3>5.1 Une variable à la fois</h3>
+<figure><img src="{{IMG:oat}}" alt="oat"><figcaption>Figure 3 — Effet d'une variation d'une variable sur $f_2$ (haut) et $f_3$ (bas). Pointillé : design recommandé. Disque plein : admissible ; disque vide : une contrainte dure est violée (valeur indicative) ; × : objectif indéfini ; texte rouge : contrainte cassée.</figcaption></figure>
+{{TBL_OAT}}
+<p class="note">« Dominé par » : nombre de points du front de Pareto qui dominent la variante. « Distance » : $d(f)$ du §4.2 (le design recommandé est à {{V:ref_regret}}). « MC » : taux de réussite sur 100 tirages d'incertitudes (masses ±10 %, couple −10 %, CdG ±10 mm, longueurs ±2 mm, angles ±2°), 95 % exigé. « — » : valeur non définie.</p>
+{{OAT_READ}}
+<figure><img src="{{IMG:plan}}" alt="plan"><figcaption>Figure 4 — Les variantes dans le plan ($f_2$, $f_3$) du front de référence. Les variantes admissibles retombent près du front ou derrière lui ; les variantes qui cassent une contrainte (×) ne sont pas comparables.</figcaption></figure>
+
+<h3>5.2 Changer de servo</h3>
+{{TBL_SERVO}}
+{{SERVO_READ}}
+
+<h3>5.3 Changer une hypothèse : l'optimum bouge</h3>
+<p>Changer une entrée de <code>config.yaml</code> ne dégrade pas seulement le design recommandé : il déplace l'optimum <i>et</i> rétrécit l'ensemble des designs possibles. Chaque ligne ci-dessous relance l'optimisation complète avec l'entrée modifiée (carte « Optimisation complète », moteur JavaScript, <b>résolution réduite</b> : 2 048 points de Sobol, 1 tour de raffinement, pas de Monte-Carlo, 6 combinaisons de servos), pour le montage « dedans » en pire cas S2. Trois grandeurs d'ensemble sont lues : le nombre de designs admissibles trouvés, le couple $C_2$ minimal atteignable par n'importe quel design admissible (meilleur $f_3$ du cas), et la meilleure stabilité atteignable (meilleur $f_2$). La ligne « référence » est calculée à la même résolution ; les lignes « bruit » relancent la référence avec d'autres graines de Sobol pour mesurer la variabilité du moteur à cette résolution.</p>
+<p class="note">Le point de compromis (coude) n'est volontairement pas comparé ici : sans Monte-Carlo et à faible résolution, le coude saute d'une combinaison de servos à l'autre d'une exécution à l'autre (à même configuration, il passe de L₂ = 59 mm avec SG90/S3306/S-U400 à des pattes toutes en S3306 de 1,5 kg), ce qui rendrait la comparaison trompeuse. Pour décider, on utilise le moteur Python complet (§6).</p>
+{{TBL_WHATIF}}
+<figure><img src="{{IMG:whatif}}" alt="whatif"><figcaption>Figure 5 — Variation, par rapport à la référence calculée à la même résolution, du nombre de designs admissibles, du meilleur couple $C_2$ atteignable et du meilleur NESM atteignable. Le bruit mesuré du moteur à cette résolution est d'environ ±7 % sur les deux premiers et ±27 % sur le troisième.</figcaption></figure>
+{{WHATIF_READ}}
+
+<h2>6. Quand faire confiance à quoi</h2>
+<table>
+<thead><tr><th>Question</th><th>Outil</th><th>Fiabilité</th></tr></thead><tbody>
+<tr><td>Quel est le meilleur design ?</td><td>optimiseur Python, moteur « complet »</td><td>référence (8 192 points, raffinement, Monte-Carlo)</td></tr>
+<tr><td>Ce design passe-t-il ? Qu'est-ce qui casse ?</td><td>simulateur</td><td>identique à Python (objectifs {{V:val_err}}) ; décision admissible/non identique sur {{V:pairs}} cas</td></tr>
+<tr><td>Où est ce design par rapport à l'optimum ?</td><td>simulateur + front de référence</td><td>valable si la configuration est celle des résultats sauvegardés ; sinon relancer</td></tr>
+<tr><td>Exploration rapide, changement d'hypothèse</td><td>simulateur, moteur JS</td><td>résolution réduite : tendances oui, chiffres fins non (§5.3)</td></tr>
+<tr><td>Robustesse aux incertitudes</td><td>Monte-Carlo (Python complet)</td><td>100 tirages ; l'erreur sur un taux de 95 % est de l'ordre de ±2 points</td></tr>
+</tbody></table>
+
+<h2>7. Ce que l'audit ne prouve pas</h2>
+<ul>
+<li><b>Il ne valide pas le modèle physique.</b> Python et JavaScript ont été écrits à partir des mêmes équations, par le même auteur : l'audit détecte les erreurs de <i>programmation</i> et les divergences d'arrondi, pas une erreur de <i>modélisation</i> commune aux deux. Contrôles indépendants existants : le test croisé du couple $C_2$ (cinématique à la main + programme linéaire), les tests d'équilibre et de NESM 3D, et la revue de littérature du rapport v2. Ce qui reste hors de portée sans le robot : la validité du modèle statique (pas d'inertie des pattes, pas de chocs), et le comportement réel des servos (couple continu, échauffement).</li>
+<li><b>Il ne valide pas les entrées.</b> Plusieurs entrées sont des hypothèses <code>[HYP]</code> : masses du châssis et de la batterie, CdG, dimensions exactes du châssis, stock de servos, section des segments, couple utilisable. §5.3 montre qu'elles déplacent l'optimum de plusieurs dizaines de pour cent : <b>les remplacer par les valeurs de la CAO est la première priorité</b> (feuille de route, étape 1).</li>
+<li><b>Il ne couvre qu'un catalogue réduit.</b> L'échantillon utilise les trois servos disponibles en quantité suffisante (SG90, S-U400, S3306) ; les Dynamixel (stock 1) sont exclus parce qu'il faut quatre unités identiques par articulation.</li>
+<li><b>Il ne dit rien du mouvement appris.</b> Le dimensionnement garantit qu'un mouvement admissible <i>existe</i> ; le RL devra le trouver.</li>
+</ul>
+
+<h2>8. Feuille de route d'utilisation</h2>
+<p>La version complète est dans <code>ROADMAP.md</code> (dossier <code>gr2_dim/</code>) ; voici l'essentiel.</p>
+<div class="callout concl"><b>Règle d'or.</b> L'optimiseur <i>propose</i>, le simulateur <i>vérifie et explique</i>, l'audit <i>garantit</i> que les deux parlent du même modèle.</div>
+<table>
+<thead><tr><th>Étape</th><th>Action</th><th>Outil</th><th>Sortie / critère d'arrêt</th></tr></thead><tbody>
+<tr><td>1</td><td><b>Remplacer les hypothèses</b> par les vraies valeurs : stock de servos, masses et CdG de la CAO, châssis, bras, couple utilisable</td><td><code>config.yaml</code>, puis <code>pytest</code></td><td>plus aucun <code>[HYP]</code> sur les entrées qui comptent le plus</td></tr>
+<tr><td>2</td><td><b>Regarder où l'on en est</b> : charger un préréglage, lire verdict, contraintes et marges, écart à l'optimum</td><td>simulateur</td><td>on sait ce qui casse et de combien</td></tr>
+<tr><td>3</td><td><b>Pré-sélectionner les servos</b> possibles par articulation (borne inférieure)</td><td>carte « Optimisation complète »</td><td>liste de servos candidats par articulation</td></tr>
+<tr><td>4</td><td><b>Explorer vite</b> (moteur JS), lire les « bornes actives », élargir les bornes collées</td><td>simulateur</td><td>plus de borne active dans le choix</td></tr>
+<tr><td>5</td><td><b>Calculer pour de bon</b> : 4 cas (dedans/dehors × S1/S2), 8 192 points, Monte-Carlo</td><td><code>serve.py</code> ou <code>run_exact.py</code></td><td>front robuste et choix (coude, ε-contrainte) par cas</td></tr>
+<tr><td>6</td><td><b>Décider</b> par règle explicite : coude par défaut ; ε-contrainte si le couple $C_2$ limite ; S2 pour la sécurité</td><td>résultats + rapport</td><td>un design, un montage, trois servos</td></tr>
+<tr><td>7</td><td><b>Vérifier et perturber</b> : charger le choix, regarder les marges, varier une variable à la fois, changer un servo, relancer si une hypothèse change</td><td>simulateur</td><td>marge la plus faible connue et acceptée</td></tr>
+<tr><td>8</td><td><b>Geler, puis recaler</b> avec CAO et banc d'essai : masses réelles, couple et échauffement du S3306 en $C_2$</td><td>CAO, banc, étapes 5–7</td><td>décision stable avec les valeurs réelles</td></tr>
+</tbody></table>
+<h3>Checklist avant de commander les servos</h3>
+<ul>
+<li>tests Python et validations JS : zéro désaccord ;</li>
+<li>stock confirmé pour <b>quatre unités</b> de chaque type retenu ;</li>
+<li>design admissible en <b>S2</b>, taux Monte-Carlo ≥ 95 %, aucune borne active ;</li>
+<li>marges du tableau de contraintes relues (la plus faible est connue) ;</li>
+<li>entrées <code>[HYP]</code> prépondérantes remplacées ou testées en sensibilité ;</li>
+<li>essai thermique du S3306 en $C_2$ prévu (le design le sollicite à 50–65 % de son couple de blocage, au-dessus du 1/5 recommandé par Robotis).</li>
+</ul>
+
+<h2>Annexe A — Fichiers et commandes</h2>
+<pre>python -m pytest -q                         # 16 tests Python
+node sim/validate.js                        # niveau A : simulateur vs Python (12 designs)
+python sim/make_ref_opt.py &amp;&amp; node sim/validate_opt.js     # niveau B : optimiseur JS vs Python
+python sim/make_ref_pipe.py &amp;&amp; node sim/validate_pipe.js   # niveau B : pipeline de bout en bout
+python audit/audit_make.py &amp;&amp; node audit/audit_run.js      # audit large (ce rapport, §3)
+node sim/experiences.js all                 # expériences du §5
+python serve.py                             # simulateur + moteur Python : http://localhost:8765
+python run_exact.py dedans S2               # un cas, sans interface
+python sim/make_ref_fronts.py &amp;&amp; (cd sim &amp;&amp; python build.py)   # reconstruit le simulateur</pre>
+
+<h2>Sources</h2>
+<ul class="src">
+<li>Hirose, Lazarenko, Endo (2012) — marge d'énergie de basculement normalisée (NESM), telle que citée dans le rapport v2.</li>
+<li>Kajita et al. (2003) — modèle table-chariot du ZMP (rapport v2).</li>
+<li>Méthodes multi-objectif : Haimes 1971 (ε-contrainte) ; Zeleny 1973 (programmation de compromis) ; Miettinen 1999, <i>Nonlinear Multiobjective Optimization</i>.</li>
+<li>Robotis. e-Manual AX-12A (charge recommandée ≤ 1/5 du couple de blocage).</li>
+<li>Catalogue de motorisation FabLab EMINES 2026-27.</li>
+<li>Rapport v2 « Dimensionnement des pattes Gr2 » (équations, revue de littérature, résultats des 4 cas).</li>
+</ul>

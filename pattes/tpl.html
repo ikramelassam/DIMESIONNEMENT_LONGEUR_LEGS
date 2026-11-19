@@ -1,0 +1,393 @@
+<title>Pattes Gr2 pire cas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Poste de lecture d'une patte : réglages à gauche, schéma côté + dessus + tableau des angles extrêmes à droite. */
+:root{
+  --bg:#eef1f3; --panel:#ffffff; --ink:#1b252d; --muted:#5b6872; --rule:#d3dadf; --soft:#f4f6f7;
+  --accent:#0b6b7c; --accent-soft:#dff0f3;
+  --coxa:#6a4fa3; --femur:#0b7a8c; --tibia:#c4600f; --ground:#7d8a93; --body:#c9d2d8; --cdg:#b3261e;
+  --ok:#1d7a46; --ok-soft:#e1f2e8; --bad:#b3261e; --bad-soft:#fae6e4; --warn:#9a5b00; --warn-soft:#faefd9;
+  --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#11171b; --panel:#192127; --ink:#e4e9ec; --muted:#97a4ad; --rule:#2c3840; --soft:#1f2a31;
+  --accent:#4cb8cb; --accent-soft:#17323a;
+  --coxa:#a994e0; --femur:#4cc3d6; --tibia:#f09a55; --ground:#8896a0; --body:#33424b; --cdg:#f08a80;
+  --ok:#5cc98a; --ok-soft:#163324; --bad:#f08a80; --bad-soft:#3a1d1b; --warn:#e6a54a; --warn-soft:#3a2b15; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11171b; --panel:#192127; --ink:#e4e9ec; --muted:#97a4ad; --rule:#2c3840; --soft:#1f2a31;
+  --accent:#4cb8cb; --accent-soft:#17323a;
+  --coxa:#a994e0; --femur:#4cc3d6; --tibia:#f09a55; --ground:#8896a0; --body:#33424b; --cdg:#f08a80;
+  --ok:#5cc98a; --ok-soft:#163324; --bad:#f08a80; --bad-soft:#3a1d1b; --warn:#e6a54a; --warn-soft:#3a2b15; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body)}
+.app{max-width:1400px;margin:0 auto;padding-inline:16px;padding-block:16px 40px;display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:1000px){.app{grid-template-columns:340px minmax(0,1fr)}}
+header{grid-column:1/-1}
+h1{font:600 22px/1.2 var(--f-body);margin:0;text-wrap:balance}
+.sub{margin:4px 0 0;color:var(--muted);font-size:13.5px;max-width:80ch}
+aside{display:grid;gap:12px;align-content:start;min-width:0}
+@media(min-width:1000px){aside{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);align-self:start;max-height:calc(100vh - 24px);overflow:auto}}
+main{display:grid;gap:16px;align-content:start;min-width:0}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:14px 16px;min-width:0}
+.card h2{font:600 15px var(--f-body);margin:0 0 8px}
+.lab{font:500 11px var(--f-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.ctl{display:grid;grid-template-columns:minmax(0,1fr) 82px;gap:2px 8px;align-items:center;margin-bottom:8px}
+.ctl label{font-size:13px}
+.ctl label small{font:11px var(--f-mono);color:var(--muted);margin-left:4px}
+.ctl input[type=range]{grid-column:1/-1;width:100%;margin:0;accent-color:var(--accent)}
+input[type=number],select{font:13px var(--f-mono);border:1px solid var(--rule);border-radius:4px;background:var(--soft);color:var(--ink);padding:3px 6px;max-width:100%}
+input[type=number]{width:100%;text-align:right}
+select{width:100%;font-family:var(--f-body)}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:5px;overflow:hidden}
+.seg button{font:500 13px var(--f-body);border:0;background:var(--panel);color:var(--ink);padding:5px 10px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--panel)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin-bottom:8px}
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.three label{font-size:12px;color:var(--muted);display:grid;gap:2px}
+.pill{font:600 12px var(--f-mono);letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;border-radius:999px}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}.pill.bad{background:var(--bad-soft);color:var(--bad)}.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.kpi{border-left:3px solid var(--rule);padding:2px 10px}
+.kpi b{display:block;font:500 18px var(--f-mono);font-variant-numeric:tabular-nums}
+.kpi span{font-size:12.5px;color:var(--muted)}
+.views{display:grid;gap:14px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:900px){.views{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}}
+.svgbox{background:var(--soft);border-radius:4px;max-width:100%}
+svg{display:block;width:100%;height:auto;font-family:var(--f-mono)}
+.tw{overflow-x:auto;max-width:100%}
+table{border-collapse:collapse;font-size:12.5px;width:100%}
+th,td{padding:5px 8px;border-bottom:1px solid var(--rule);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+th{font-weight:600;color:var(--muted);background:var(--soft)}
+th:first-child,td:first-child{text-align:left}
+tbody tr.clk{cursor:pointer}tr.sel td{background:var(--accent-soft)}
+td.ok{color:var(--ok)}td.bad{color:var(--bad)}td.warn{color:var(--warn)}
+.note{font-size:12.5px;color:var(--muted);margin:6px 0 0;max-width:90ch}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:14px;height:4px;border-radius:2px;margin-right:5px;vertical-align:middle}
+.chips{display:flex;flex-wrap:wrap;gap:4px 8px;font:12px var(--f-mono);color:var(--muted)}
+.chips span{border:1px solid var(--rule);border-radius:4px;padding:1px 6px}
+</style>
+<div class="app">
+<header>
+  <h1>Pattes Gr2 : angles et dimensions au pire cas</h1>
+  <p class="sub">Réglez L2, L3, α, β et ξ. Le schéma montre la patte au repos avec ses cotes. Le tableau donne, pour chaque articulation, l'angle le plus extrême rencontré sur les 14 phases du cahier des charges, avec le CdG au pire cas (S2) et les 4 pattes. Mêmes équations que le programme d'optimisation <code>gr2_dim</code>.</p>
+</header>
+<aside>
+  <section class="card">
+    <h2>Design</h2>
+    <div class="row"><span class="lab">Départ</span></div>
+    <select id="preset" aria-label="Design de départ"></select>
+    <div class="row" style="margin-top:10px"><span class="lab">CdG</span>
+      <div class="seg" id="seg-sc"><button data-v="S2" aria-pressed="true">S2 pire cas</button><button data-v="S1" aria-pressed="false">S1 nominal</button></div></div>
+    <div class="row"><span class="lab">Coxa</span>
+      <div class="seg" id="seg-mount"><button data-v="dedans" aria-pressed="true">dedans</button><button data-v="dehors" aria-pressed="false">dehors</button></div></div>
+    <div id="sliders"></div>
+    <div class="row"><span class="lab">Servos</span></div>
+    <div class="three">
+      <label>C1 (lacet)<select id="sv0"></select></label>
+      <label>C2 (hanche)<select id="sv1"></select></label>
+      <label>C3 (genou)<select id="sv2"></select></label>
+    </div>
+  </section>
+  <section class="card">
+    <h2>Entrées fixes</h2>
+    <div class="chips" id="fixed"></div>
+    <p class="note">Valeurs de <code>config.yaml</code>. Plusieurs sont des hypothèses [HYP] à confirmer avec la CAO.</p>
+  </section>
+</aside>
+<main>
+  <section class="card"><h2>Verdict</h2><div class="row" id="verdict"></div><div class="kpis" id="kpis"></div></section>
+  <section class="card">
+    <h2>Patte au repos : dimensions et angles</h2>
+    <div class="views">
+      <div><div class="svgbox" id="rest"></div>
+        <div class="legend"><span><i style="background:var(--coxa)"></i>L1 coxa</span><span><i style="background:var(--femur)"></i>L2 fémur</span><span><i style="background:var(--tibia)"></i>L3 tibia</span></div></div>
+      <div><div class="svgbox" id="topv"></div></div>
+    </div>
+    <div class="info" id="restinfo"></div>
+  </section>
+  <section class="card">
+    <h2>Angles extrêmes par articulation (pire cas sur les 14 phases)</h2>
+    <div class="tw" id="worst"></div>
+    <p class="note" id="worstnote"></p>
+  </section>
+  <section class="card">
+    <h2>Une phase en détail</h2>
+    <div class="row">
+      <span class="lab">Phase</span><select id="sel-ph" style="width:auto"></select>
+      <span class="lab">État</span><select id="sel-st" style="width:auto"></select>
+      <span class="lab">Patte</span><select id="sel-leg" style="width:auto"><option value="0">FL avant-gauche</option><option value="1">FR avant-droite</option><option value="2">RL arrière-gauche</option><option value="3">RR arrière-droite</option></select>
+    </div>
+    <div class="views">
+      <div><div class="svgbox" id="phside"></div></div>
+      <div><div class="svgbox" id="phtop"></div></div>
+    </div>
+    <div class="tw" id="phinfo" style="margin-top:8px"></div>
+    <p class="note">Le corps est placé à la position (balancement) qui maximise le NESM parmi celles que les servos peuvent tenir. Cliquez une ligne du tableau ci-dessous pour changer de phase.</p>
+    <div class="tw" id="phases" style="margin-top:8px"></div>
+  </section>
+  <section class="card">
+    <h2>Définitions</h2>
+    <p class="note"><b>α</b> : élévation du fémur au repos (au-dessus de l'horizontale). <b>β</b> : angle du tibia sous l'horizontale ; au-delà de 90° le pied revient sous le genou. <b>θ1</b> : lacet de la coxa par rapport à la direction de repos ξ. <b>θ2</b> = α. <b>θ3</b> = α + β, flexion du genou (angle intérieur = 180° − θ3), borné à [20°, 160°]. <b>D</b> : portée horizontale de C2 au pied. <b>H</b> : hauteur de l'axe C2 au sol. <b>h</b> : garde au sol du châssis = H − e. <b>ξ</b> : angle de la patte au repos, mesuré depuis l'axe latéral (0° = patte perpendiculaire au corps, 90° = patte alignée avec lui). Schéma du châssis indicatif.</p>
+  </section>
+</main>
+</div>
+<script>/*MODEL*/</script>
+<script>
+const CONFIG = /*CONFIG*/;
+const PRESETS = /*PRESETS*/;
+const M = Gr2Model;
+const clone = (o) => JSON.parse(JSON.stringify(o));
+const $ = (id) => document.getElementById(id);
+const f = (v, d = 1) => (Number.isFinite(v) ? v.toFixed(d).replace(".", ",") : "—");
+const rad = (d) => d * Math.PI / 180, deg = (r) => r * 180 / Math.PI;
+const BOUNDS = { L2: [20, 120, 0.5, "mm"], L3: [30, 200, 0.5, "mm"], alpha: [-20, 60, 0.5, "°"], beta: [20, 150, 0.5, "°"], xi: [0, 90, 0.5, "°"] };
+const LABELS = { L2: "L2 fémur", L3: "L3 tibia", alpha: "α", beta: "β", xi: "ξ" };
+const S = { x: {}, sc: "S2", mount: "dedans", names: ["SG90", "S3306", "S-U400"], ph: 0, st: 0, leg: 0 };
+let R = null, P = null;
+
+function setX(k, v) { S.x[k] = v; }
+function load(pr) {
+  S.x = Object.assign({}, pr.x); S.sc = pr.sc; S.mount = pr.mount; S.names = pr.servos.slice();
+  for (const k in S.x) { $("n-" + k).value = S.x[k]; $("r-" + k).value = S.x[k]; }
+  ["sv0", "sv1", "sv2"].forEach((id, i) => { $(id).value = S.names[i]; });
+  for (const b of $("seg-sc").children) b.setAttribute("aria-pressed", b.dataset.v === S.sc);
+  for (const b of $("seg-mount").children) b.setAttribute("aria-pressed", b.dataset.v === S.mount);
+  S.ph = 0; S.st = 0; run();
+}
+function build() {
+  const sl = $("sliders");
+  for (const k of Object.keys(BOUNDS)) {
+    const [a, b, st, u] = BOUNDS[k];
+    const d = document.createElement("div"); d.className = "ctl";
+    d.innerHTML = `<label for="n-${k}">${LABELS[k]}<small>${u}</small></label><input type="number" id="n-${k}" min="${a}" max="${b}" step="${st}"><input type="range" id="r-${k}" min="${a}" max="${b}" step="${st}" aria-label="${LABELS[k]}">`;
+    sl.appendChild(d);
+    const upd = (e) => { let v = parseFloat(e.target.value); if (!Number.isFinite(v)) return; S.x[k] = v; $("n-" + k).value = v; $("r-" + k).value = v; sched(); };
+    d.querySelector("#n-" + k).addEventListener("input", upd); d.querySelector("#r-" + k).addEventListener("input", upd);
+  }
+  const names = CONFIG.servos.map((s) => s.name);
+  ["sv0", "sv1", "sv2"].forEach((id, i) => {
+    $(id).innerHTML = names.map((n) => `<option>${n}</option>`).join("");
+    $(id).addEventListener("change", (e) => { S.names[i] = e.target.value; run(); });
+  });
+  $("preset").innerHTML = PRESETS.map((p, i) => `<option value="${i}">${p.label}</option>`).join("");
+  $("preset").addEventListener("change", (e) => load(PRESETS[+e.target.value]));
+  for (const [id, key] of [["seg-sc", "sc"], ["seg-mount", "mount"]]) {
+    $(id).addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; S[key] = b.dataset.v; for (const c of $(id).children) c.setAttribute("aria-pressed", c === b); run(); });
+  }
+  $("sel-ph").addEventListener("change", (e) => { S.ph = +e.target.value; S.st = 0; draw(); });
+  $("sel-st").addEventListener("change", (e) => { S.st = +e.target.value; draw(); });
+  $("sel-leg").addEventListener("change", (e) => { S.leg = +e.target.value; draw(); });
+}
+let tm = null;
+function sched() { clearTimeout(tm); tm = setTimeout(run, 90); }
+
+function run() {
+  P = clone(CONFIG); P.chassis.mount = S.mount; P.gabarit = 400;
+  const combo = S.names.map((n) => P.servos.findIndex((s) => s.name === n));
+  R = M.evaluate(P, S.x, S.sc, { mode: "exact", combo });
+  const phs = R.phases;
+  const cur = $("sel-ph").value;
+  $("sel-ph").innerHTML = phs.map((p, i) => `<option value="${i}">${p.name}</option>`).join("");
+  S.ph = Math.min(S.ph, phs.length - 1); $("sel-ph").value = S.ph;
+  draw();
+}
+
+/* ---------- utilitaires SVG ---------- */
+const col = (c) => `var(--${c})`;
+function arcPath(cx, cy, r, a0, a1) {
+  const p = (a) => [cx + r * Math.cos(rad(a)), cy - r * Math.sin(rad(a))];
+  const [x0, y0] = p(a0), [x1, y1] = p(a1);
+  return `M${x0.toFixed(1)} ${y0.toFixed(1)} A${r} ${r} 0 ${Math.abs(a1 - a0) > 180 ? 1 : 0} ${a1 > a0 ? 0 : 1} ${x1.toFixed(1)} ${y1.toFixed(1)}`;
+}
+function txt(x, y, s, o = {}) {
+  return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" font-size="${o.size || 11}" fill="${o.fill || col("ink")}" text-anchor="${o.anchor || "middle"}" ${o.w ? `font-weight="${o.w}"` : ""}>${s}</text>`;
+}
+
+/* ---------- vue de côté ----------
+   pts : C1, C2, K, F en (r,z) mm ; body : {edge, under, top} ; dims : bool */
+function sideSVG(pts, o) {
+  const { C1, C2, K, F } = pts;
+  const xs = [C1[0], C2[0], K[0], F[0], o.body ? o.body.edge : C1[0], -14];
+  const zs = [0, C1[1], C2[1], K[1], F[1], o.body ? o.body.top : 0];
+  const rmin = Math.min(...xs) - 28, rmax = Math.max(...xs) + 40;
+  const zmin = Math.min(...zs, F[1]) - (o.dims ? 34 : 20), zmax = Math.max(...zs) + 22;
+  const W = 560, s = W / (rmax - rmin), H = (zmax - zmin) * s;
+  const X = (r) => (r - rmin) * s, Y = (z) => (zmax - z) * s;
+  let g = "";
+  // sol
+  g += `<line x1="0" x2="${W}" y1="${Y(0)}" y2="${Y(0)}" stroke="${col("ground")}" stroke-width="1.5"/>`;
+  g += `<rect x="0" y="${Y(0)}" width="${W}" height="${Math.max(0, H - Y(0))}" fill="${col("ground")}" opacity=".12"/>`;
+  if (o.obst) g += `<rect x="${X(o.obst[0])}" y="${Y(o.obst[2])}" width="${(o.obst[1] - o.obst[0]) * s}" height="${o.obst[2] * s}" fill="${col("ground")}" opacity=".5"/>`;
+  if (o.body) {
+    const b = o.body;
+    g += `<rect x="${X(rmin)}" y="${Y(b.top)}" width="${(b.edge - rmin) * s}" height="${(b.top - b.under) * s}" fill="${col("body")}" opacity=".85"/>`;
+    g += txt(X(rmin) + 6, Y(b.top) + 14, "châssis (schéma)", { anchor: "start", size: 10, fill: col("muted") });
+  }
+  // segments
+  const seg = (A, B, c, w) => `<line x1="${X(A[0])}" y1="${Y(A[1])}" x2="${X(B[0])}" y2="${Y(B[1])}" stroke="${col(c)}" stroke-width="${w}" stroke-linecap="round"/>`;
+  g += seg(C1, C2, "coxa", 6) + seg(C2, K, "femur", 6) + seg(K, F, "tibia", 6);
+  const dot = (A, r, c) => `<circle cx="${X(A[0])}" cy="${Y(A[1])}" r="${r}" fill="${col(c)}" stroke="${col("panel")}" stroke-width="1.5"/>`;
+  g += dot(C1, 5, "coxa") + dot(C2, 5, "femur") + dot(K, 5, "tibia") + dot(F, 4, "ink");
+  g += txt(X(C1[0]) - 4, Y(C1[1]) - 10, "C1", { size: 10, anchor: "end" }) + txt(X(C2[0]), Y(C2[1]) - 10, "C2", { size: 10 }) + txt(X(K[0]) + 8, Y(K[1]) - 8, "genou", { size: 10, anchor: "start" });
+  // angles (depuis les points)
+  const aF = deg(Math.atan2(K[1] - C2[1], K[0] - C2[0])), aT = deg(Math.atan2(F[1] - K[1], F[0] - K[0]));
+  const ra = 30;
+  g += `<line x1="${X(C2[0])}" y1="${Y(C2[1])}" x2="${X(C2[0]) + ra + 16}" y2="${Y(C2[1])}" stroke="${col("muted")}" stroke-dasharray="3 3"/>`;
+  g += `<line x1="${X(K[0])}" y1="${Y(K[1])}" x2="${X(K[0]) + ra + 16}" y2="${Y(K[1])}" stroke="${col("muted")}" stroke-dasharray="3 3"/>`;
+  if (Math.abs(aF) > 0.5) { g += `<path d="${arcPath(X(C2[0]), Y(C2[1]), ra, 0, aF)}" fill="none" stroke="${col("femur")}" stroke-width="2"/>`; g += txt(X(C2[0]) + ra + 8, Y(C2[1]) + (aF > 0 ? 16 : -6), `${o.aLab || "θ2"} ${f(aF)}°`, { size: 11, anchor: "start", fill: col("femur"), w: 600 }); }
+  if (Math.abs(aT) > 0.5) {
+    const b0 = aT < 0 ? aT : 0, b1 = aT < 0 ? 0 : aT;
+    g += `<path d="${arcPath(X(K[0]), Y(K[1]), ra, b0, b1)}" fill="none" stroke="${col("tibia")}" stroke-width="2"/>`;
+    g += txt(X(K[0]) + ra + 8, Y(K[1]) + 16, `${o.bLab || "β"} ${f(-aT)}°`, { size: 11, anchor: "start", fill: col("tibia"), w: 600 });
+  }
+  // cotes
+  if (o.dims) {
+    const d = o.dims;
+    const midl = (A, B, dx, dy, t, c) => txt(X((A[0] + B[0]) / 2) + dx, Y((A[1] + B[1]) / 2) + dy, t, { size: 11, fill: col(c), w: 600 });
+    g += midl(C1, C2, 0, -10, `L1 ${f(d.L1, 0)}`, "coxa");
+    g += midl(C2, K, 0, -14, `L2 ${f(d.L2)}`, "femur");
+    g += midl(K, F, 38, 4, `L3 ${f(d.L3)}`, "tibia");
+    // D
+    const yD = Y(0) + 22;
+    g += `<line x1="${X(C2[0])}" x2="${X(F[0])}" y1="${yD}" y2="${yD}" stroke="${col("ink")}" stroke-width="1"/>`;
+    g += `<line x1="${X(C2[0])}" x2="${X(C2[0])}" y1="${Y(0) + 6}" y2="${yD + 5}" stroke="${col("ink")}"/><line x1="${X(F[0])}" x2="${X(F[0])}" y1="${Y(0) + 6}" y2="${yD + 5}" stroke="${col("ink")}"/>`;
+    g += txt(X((C2[0] + F[0]) / 2), yD + 14, `D ${f(d.D)}`, { size: 11, w: 600 });
+    // H
+    const xH = X(rmin) + 22;
+    g += `<line x1="${xH}" x2="${xH}" y1="${Y(0)}" y2="${Y(C2[1])}" stroke="${col("ink")}"/>`;
+    g += `<line x1="${xH - 5}" x2="${xH + 5}" y1="${Y(C2[1])}" y2="${Y(C2[1])}" stroke="${col("ink")}"/><line x1="${xH - 5}" x2="${xH + 5}" y1="${Y(0)}" y2="${Y(0)}" stroke="${col("ink")}"/>`;
+    g += `<text x="${xH + 6}" y="${(Y(0) + Y(C2[1])) / 2 + 8}" font-size="11" font-weight="600" fill="${col("ink")}" >H ${f(d.H)}</text>`;
+    if (o.body) g += `<text x="${xH + 6}" y="${(Y(0) + Y(o.body.under)) / 2 + 2}" font-size="11" fill="${col(d.h < d.hmin ? "bad" : "ok")}" font-weight="600" ></text>`;
+    g += txt(X(o.body.edge) + 6, Y(o.body.under) + 4, `h ${f(d.h)}`, { size: 11, anchor: "start", fill: col(d.h < d.hmin ? "bad" : "ok"), w: 600 });
+  }
+  return `<svg viewBox="0 0 ${W} ${H.toFixed(0)}" role="img" aria-label="${o.aria}">${g}</svg>`;
+}
+
+/* ---------- vue de dessus ---------- */
+function topSVG(o) {
+  const ch = P.chassis, geo = R.geo;
+  let ext = Math.max(200, ...geo.foot.map((q) => Math.max(Math.abs(q[0]), Math.abs(q[1]))));
+  if (o.feet) o.feet.forEach((q) => { ext = Math.max(ext, Math.abs(q[0]), Math.abs(q[1])); });
+  const Rr = ext + 40, sz = Rr * 0.045;
+  const X = (y) => -y, Y = (x) => -x; // x avant = haut, y gauche = gauche
+  let g = "";
+  g += `<rect x="${-200}" y="${-200}" width="400" height="400" fill="none" stroke="${col("muted")}" stroke-dasharray="6 5" stroke-width="1.2"/>`;
+  g += `<text x="${-196}" y="${-190}" font-size="${sz * .8}" fill="${col("muted")}">gabarit 400</text>`;
+  g += `<rect x="${X(ch.M_ch / 2)}" y="${Y(ch.N_ch / 2)}" width="${ch.M_ch}" height="${ch.N_ch}" fill="${col("body")}" stroke="${col("ground")}"/>`;
+  g += `<text x="0" y="${sz * .35}" font-size="${sz}" fill="${col("muted")}" text-anchor="middle">${f(ch.N_ch, 0)} × ${f(ch.M_ch, 0)}</text>`;
+  g += `<polygon points="${(o.poly || []).map((q) => `${X(q[1])},${Y(q[0])}`).join(" ")}" fill="${col("accent")}" opacity=".13" stroke="${col("accent")}" stroke-width="1"/>`;
+  const names = M.LEG_NAMES, hl = o.hl;
+  for (let i = 0; i < 4; i++) {
+    const c1 = geo.C1[i], p0 = geo.P0[i], ft = (o.feet && o.feet[i]) || geo.foot[i];
+    const c = i === hl ? col("tibia") : col("femur");
+    g += `<line x1="${X(c1[1])}" y1="${Y(c1[0])}" x2="${X(p0[1])}" y2="${Y(p0[0])}" stroke="${col("coxa")}" stroke-width="${sz * .35}"/>`;
+    g += `<line x1="${X(p0[1])}" y1="${Y(p0[0])}" x2="${X(ft[1])}" y2="${Y(ft[0])}" stroke="${c}" stroke-width="${sz * .28}" ${o.air === i ? `stroke-dasharray="${sz * .6} ${sz * .5}"` : ""} stroke-linecap="round"/>`;
+    g += `<circle cx="${X(c1[1])}" cy="${Y(c1[0])}" r="${sz * .45}" fill="${col("coxa")}"/>`;
+    g += `<circle cx="${X(ft[1])}" cy="${Y(ft[0])}" r="${sz * .6}" fill="${o.air === i ? "none" : col("ink")}" stroke="${col("ink")}" stroke-width="${sz * .12}"/>`;
+    g += `<text x="${X(ft[1]) + (ft[1] > 0 ? -sz * .9 : sz * .9)}" y="${Y(ft[0]) + (ft[0] > 0 ? -sz * .8 : sz * 1.5)}" font-size="${sz * .85}" fill="${col("ink")}" text-anchor="${ft[1] > 0 ? "end" : "start"}">${names[i]}</text>`;
+  }
+  if (o.cdg) {
+    const [gx, gy] = o.cdg, [hx, hy] = o.box;
+    g += `<rect x="${X(gy + hy)}" y="${Y(gx + hx)}" width="${2 * hy}" height="${2 * hx}" fill="none" stroke="${col("cdg")}" stroke-width="${sz * .12}"/>`;
+    g += `<circle cx="${X(gy)}" cy="${Y(gx)}" r="${sz * .4}" fill="${col("cdg")}"/>`;
+  }
+  // angle xi sur FL
+  const u = geo.u[0], p0 = geo.P0[0], rr = Math.min(60, (R.geo.D0 + 30) * .6);
+  const a0 = 90; // direction +y (gauche) vers l'ecran : angle depuis axe lateral
+  const lx = X(p0[1]), ly = Y(p0[0]);
+  const aEnd = Math.atan2(u[0], u[1]); // angle depuis +y vers +x
+  const pt = (a) => [lx + rr * (-Math.cos(a)), ly + rr * (-Math.sin(a))];
+  const [ax, ay] = pt(0), [bx, by] = pt(aEnd);
+  g += `<line x1="${lx}" y1="${ly}" x2="${lx - rr * 1.25}" y2="${ly}" stroke="${col("muted")}" stroke-dasharray="${sz * .5} ${sz * .4}" stroke-width="${sz * .1}"/>`;
+  g += `<path d="M${ax} ${ay} A${rr} ${rr} 0 0 1 ${bx} ${by}" fill="none" stroke="${col("accent")}" stroke-width="${sz * .18}"/>`;
+  const mid = aEnd / 2; g += `<text x="${lx - (rr + sz * .6) * Math.cos(mid)}" y="${ly - (rr + sz * .6) * Math.sin(mid)}" font-size="${sz * .95}" fill="${col("accent")}" font-weight="600" text-anchor="end">ξ ${f(S.x.xi)}°</text>`;
+  g += `<text x="${Rr - 8}" y="${-Rr + sz * 1.2}" font-size="${sz * .8}" fill="${col("muted")}" text-anchor="end">↑ avant</text>`;
+  return `<svg viewBox="${-Rr} ${-Rr} ${2 * Rr} ${2 * Rr}" role="img" aria-label="${o.aria}">${g}</svg>`;
+}
+
+/* ---------- affichage ---------- */
+function bodyOf(geo) {
+  const ch = P.chassis, c = ch.c;
+  const edge = ch.mount === "dedans" ? P.leg.L1 + c : c;
+  return { edge, under: geo.h, top: geo.h + 45 };
+}
+function draw() {
+  const geo = R.geo, sv = R.servo, pre = R.pre, ch = P.chassis, L1 = P.leg.L1;
+  // verdict + kpis
+  const hmin = P.task.obstacle + P.task.h_margin;
+  const pills = [];
+  pills.push(sv.admissible ? `<span class="pill ok">design admissible</span>` : `<span class="pill bad">design non admissible</span>`);
+  pills.push(pre.ok ? `<span class="pill ok">pré-filtre ok</span>` : `<span class="pill bad">pré-filtre : ${Object.entries(pre.viol).filter(([, v]) => v > 0).map(([k]) => k.split("_")[0]).join(", ")}</span>`);
+  pills.push(sv.allPh ? `<span class="pill ok">14/14 phases tenables</span>` : `<span class="pill bad">${sv.phases.filter((p) => p.ok).length}/14 phases tenables</span>`);
+  pills.push(sv.spanOk ? `<span class="pill ok">débattements ok</span>` : `<span class="pill bad">débattement trop grand</span>`);
+  pills.push(sv.massOk ? `<span class="pill ok">masse ok</span>` : `<span class="pill bad">masse trop élevée</span>`);
+  $("verdict").innerHTML = pills.join("");
+  const kp = (v, l, c) => `<div class="kpi" style="border-color:var(--${c || "rule"})"><b>${v}</b><span>${l}</span></div>`;
+  $("kpis").innerHTML = kp(f(sv.f1, 3) + " kg", "f1 masse des 4 pattes") + kp(Number.isFinite(sv.f2) ? f(sv.f2) + " mm" : "indéfini", "f2 NESM (marge de stabilité)", sv.f2 >= 2 ? "ok" : "warn") + kp(f(sv.f3, 3) + " N·m", "f3 couple C2 requis") + kp(f(geo.h) + " mm", "h garde au sol (≥ " + f(hmin, 0) + ")", geo.h >= hmin ? "ok" : "bad") + kp(f(pre.th3) + "°", "θ3 repos (20–160)", pre.th3 >= 20 && pre.th3 <= 160 ? "ok" : "bad");
+  // repos
+  const body = bodyOf(geo);
+  const C1 = [0, geo.H2], C2 = [L1, geo.H2], K = [L1 + geo.L2 * Math.cos(geo.a), geo.H2 + geo.L2 * Math.sin(geo.a)], F = [L1 + geo.D0, 0];
+  $("rest").innerHTML = sideSVG({ C1, C2, K, F }, { body, dims: { L1, L2: geo.L2, L3: geo.L3, D: geo.D0, H: geo.H2, h: geo.h, hmin }, aLab: "α", bLab: "β", aria: "Patte au repos, vue de côté avec cotes" });
+  $("topv").innerHTML = topSVG({ poly: [0, 1, 3, 2].map((i) => geo.foot[i]), aria: "Vue de dessus au repos" });
+  $("restinfo").innerHTML = "";
+  // pire cas
+  worst();
+  // phase
+  const ph = sv.phases, cur = ph[S.ph];
+  const states = R.detail[S.ph];
+  $("sel-st").innerHTML = states.map((d, j) => `<option value="${j}">${d.label}</option>`).join("");
+  S.st = Math.min(S.st, states.length - 1); $("sel-st").value = S.st; $("sel-leg").value = S.leg;
+  const NS = R.sw.length, sIdx = cur.ok ? cur.best : (NS - 1) / 2;
+  const v = M.stateView(P, R, S.ph, S.st, sIdx);
+  const lg = v.legs[S.leg];
+  if (lg) {
+    const pts = { C1: [0, lg.C1[2]], C2: [L1, lg.C2[2]], K: [L1 + (lg.knee[0] - lg.C2[0]) * lg.dirv[0] + (lg.knee[1] - lg.C2[1]) * lg.dirv[1], lg.knee[2]], F: [lg.rh, lg.zf] };
+    $("phside").innerHTML = sideSVG(pts, { obst: lg.zf > 0 ? [lg.rh - 22, lg.rh + 22, lg.zf] : null, aria: `Patte ${M.LEG_NAMES[S.leg]} en phase ${cur.name}` });
+  } else $("phside").innerHTML = "";
+  const feet = [0, 1, 2, 3].map((l) => v.legs[l].rel);
+  $("phtop").innerHTML = topSVG({ feet, poly: v.order.map((l) => v.legs[l].rel), hl: S.leg, air: v.swing, cdg: v.Gc, box: v.hxy, aria: "Vue de dessus de la phase" });
+  const ok = (b) => (b ? "ok" : "bad");
+  const rows = lg ? [["θ1 lacet", lg.th1, "°"], ["θ2 = α", lg.th2, "°"], ["θ3 = α + β", lg.th3, "°"], ["D (C2→pied)", lg.D, " mm"], ["distance C1→pied", lg.rh, " mm"], ["hauteur du pied", lg.zf, " mm"]] : [];
+  $("phinfo").innerHTML = lg ? `<table><thead><tr><th>${M.LEG_NAMES[S.leg]} — ${cur.name} — ${v.label}</th>${rows.map((r) => `<th>${r[0]}</th>`).join("")}<th>portée</th></tr></thead><tbody><tr><td>valeurs</td>${rows.map((r) => `<td>${f(r[1])}${r[2]}</td>`).join("")}<td class="${ok(lg.reach)}">${lg.reach ? "atteignable" : "hors portée"}</td></tr></tbody></table>` : "";
+  // tableau phases
+  $("phases").innerHTML = `<table><thead><tr><th>Phase</th><th>statut</th><th>balancement (x ; y)</th><th>NESM</th><th>τ1</th><th>τ2</th><th>τ3</th><th>positions : géo / stab / couple / ok</th></tr></thead><tbody>${ph.map((p, i) => `<tr class="clk ${i === S.ph ? "sel" : ""}" data-i="${i}"><td>${p.name}</td><td class="${p.ok ? "ok" : "bad"}">${p.ok ? "tenable" : "impossible"}</td><td>${p.ok ? f(p.sway[0], 0) + " ; " + f(p.sway[1], 0) : "—"}</td><td>${p.ok ? f(p.nesm) : "—"}</td>${[0, 1, 2].map((j) => `<td>${p.ok ? f(p.tau[j], 3) : "—"}</td>`).join("")}<td>${p.cnt.geo} / ${p.cnt.stab} / ${p.cnt.couple} / ${p.cnt.ok}</td></tr>`).join("")}</tbody></table>`;
+  for (const tr of $("phases").querySelectorAll("tr.clk")) tr.addEventListener("click", () => { S.ph = +tr.dataset.i; S.st = 0; $("sel-ph").value = S.ph; draw(); });
+  // entrees fixes
+  $("fixed").innerHTML = [`L1 ${f(L1, 0)}`, `châssis ${f(ch.N_ch, 0)}×${f(ch.M_ch, 0)}`, `e ${f(ch.e, 0)}`, `c ${f(ch.c, 0)}`, `course ${f(P.task.stroke, 0)}`, `obstacle ${f(P.task.obstacle, 0)}`, `levée +${f(P.task.dh_lift, 0)}`, `lacet ±${f(P.task.yaw_step / 2, 0)}°`, `SF ${P.margins.SF}`, `accél. ${P.task.accel} m/s²`, `grille ${P.task.sway_n}×${P.task.sway_n}`].map((t) => `<span>${t}</span>`).join("");
+}
+
+function worst() {
+  const sv = R.servo, J = ["θ1 lacet (C1)", "θ2 hanche (C2)", "θ3 genou (C3)"];
+  const nm = M.LEG_NAMES;
+  const ext = [0, 1, 2].map(() => ({ min: { v: Infinity }, max: { v: -Infinity } }));
+  for (let pi = 0; pi < R.phases.length; pi++) {
+    const ph = sv.phases[pi]; if (!ph.ok) continue;
+    for (let l = 0; l < 4; l++) for (let j = 0; j < 3; j++) {
+      const a = R.angMin[pi][ph.best][l][j], b = R.angMax[pi][ph.best][l][j];
+      if (a < ext[j].min.v) ext[j].min = { v: a, ph: ph.name, leg: nm[l] };
+      if (b > ext[j].max.v) ext[j].max = { v: b, ph: ph.name, leg: nm[l] };
+    }
+  }
+  const jm = P.margins.joint_margin;
+  const rows = [0, 1, 2].map((j) => {
+    const e = ext[j], sp = sv.span[j], av = sv.rangeAvail[j];
+    const none = !Number.isFinite(e.min.v);
+    const names = sv.names[j];
+    const T = sv.tauMaxBest[j], Cu = sv.Cu[j], Cs = sv.Cst[j];
+    return `<tr><td>${J[j]}<br><small style="color:var(--muted)">${names}</small></td>
+      <td>${none ? "—" : f(e.min.v) + "°"}<br><small style="color:var(--muted)">${none ? "" : e.min.ph + " " + e.min.leg}</small></td>
+      <td>${none ? "—" : f(e.max.v) + "°"}<br><small style="color:var(--muted)">${none ? "" : e.max.ph + " " + e.max.leg}</small></td>
+      <td class="${sp <= av ? "ok" : "bad"}">${none ? "—" : f(sp) + "°"}<br><small style="color:var(--muted)">dispo ${f(av, 0)}°</small></td>
+      <td class="${T <= Cu ? "ok" : "bad"}">${f(T, 3)}<br><small style="color:var(--muted)">limite ${f(Cu, 3)} · blocage ${f(Cs, 3)}</small></td></tr>`;
+  }).join("");
+  $("worst").innerHTML = `<table><thead><tr><th>Articulation</th><th>angle min</th><th>angle max</th><th>débattement</th><th>couple max (N·m)</th></tr></thead><tbody>${rows}</tbody></table>`;
+  const nok = sv.phases.filter((p) => !p.ok).map((p) => p.name);
+  $("worstnote").innerHTML = (nok.length ? `<b style="color:var(--bad)">Phases impossibles : ${nok.join(", ")}</b>. Les extrêmes ne couvrent que les phases tenables. ` : "") + `Extrêmes pris sur les 4 pattes à la position de corps retenue pour chaque phase (CdG ${S.sc === "S2" ? "au pire cas, boîte de positions possibles" : "nominal"}). Débattement disponible = course du servo − 2 × ${jm}° de marge. Limite de couple = fraction × C<sub>blocage</sub> / SF.`;
+}
+
+build();
+load(PRESETS[0]);
+</script>
